@@ -93,6 +93,10 @@ export const patientSchema = z.object({
   reference: z.string().optional(),
   notes: z.string().optional(),
   status: z.enum(['ativo', 'inativo']),
+  // IA Preferences
+  aiCommunication: z.boolean().default(true),
+  preferredChannel: z.enum(['whatsapp', 'email', 'sms']).default('whatsapp'),
+  aiFrequency: z.enum(['diario', 'semanal', 'somente_consultas']).default('somente_consultas'),
 });
 
 export type PatientFormData = z.infer<typeof patientSchema>;

@@ -7,6 +7,7 @@ import {
   Stethoscope,
   Users,
   Calendar,
+  FileText,
   BarChart2,
   Settings,
   ChevronLeft,
@@ -29,9 +30,10 @@ const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
   { icon: Stethoscope, label: 'Médicos', href: '/medicos' },
   { icon: Users, label: 'Pacientes', href: '/pacientes' },
-  { icon: Calendar, label: 'Agendamentos', href: '/agendamentos', disabled: true, badge: 'Em breve' },
-  { icon: BarChart2, label: 'Relatórios', href: '/relatorios', disabled: true, badge: 'Em breve' },
-  { icon: Settings, label: 'Configurações', href: '/configuracoes', disabled: true, badge: 'Em breve' },
+  { icon: Calendar, label: 'Agenda', href: '/agenda' },
+  { icon: FileText, label: 'Laudos', href: '/laudos' },
+  { icon: BarChart2, label: 'Relatórios', href: '/relatorios' },
+  { icon: Settings, label: 'Disponibilidade', href: '/medicos/disponibilidade' },
 ];
 
 interface AppSidebarProps {

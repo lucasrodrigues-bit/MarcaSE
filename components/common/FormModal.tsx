@@ -15,6 +15,7 @@ interface FormModalProps {
   isLoading?: boolean;
   children: React.ReactNode;
   submitLabel?: string;
+  footer?: React.ReactNode;
 }
 
 export function FormModal({
@@ -26,6 +27,7 @@ export function FormModal({
   isLoading = false,
   children,
   submitLabel = 'Salvar',
+  footer,
 }: FormModalProps) {
   // Handle escape key
   useEffect(() => {
@@ -93,31 +95,33 @@ export function FormModal({
           <div className="flex-1 overflow-y-auto px-6 py-4">{children}</div>
 
           {/* Fixed Footer */}
-          <div className="flex items-center justify-end gap-3 border-t px-6 py-4 shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              onClick={onSubmit}
-              disabled={isLoading}
-              className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
-            >
-              {isLoading ? (
-                <>
-                  <Spinner className="mr-2 h-4 w-4" />
-                  Salvando...
-                </>
-              ) : (
-                submitLabel
-              )}
-            </Button>
-          </div>
+          {footer || (
+            <div className="flex items-center justify-end gap-3 border-t px-6 py-4 shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isLoading}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={onSubmit}
+                disabled={isLoading}
+                className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
+              >
+                {isLoading ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    Salvando...
+                  </>
+                ) : (
+                  submitLabel
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
