@@ -23,6 +23,7 @@ import { patientSchema, type PatientFormData } from '@/schemas';
 import { useData } from '@/context/DataContext';
 import type { Patient, Attachment } from '@/types';
 import { toast } from 'sonner';
+import { Progress } from '@/components/ui/progress';
 
 interface PatientFormProps {
   open: boolean;
@@ -108,8 +109,18 @@ export function PatientForm({ open, onOpenChange, patient }: PatientFormProps) {
       state: 'SE',
       isVip: false,
       isNewborn: false,
+      aiCommunication: true,
+      preferredChannel: 'whatsapp',
+      aiFrequency: 'somente_consultas',
     },
   });
+
+  const [currentStep, setCurrentStep] = useState(1);
+  const steps = [
+    { id: 1, title: 'Dados Pessoais' },
+    { id: 2, title: 'Contato e Endereço' },
+    { id: 3, title: 'Preferências e IA' },
+  ];
 
   const gender = watch('gender');
   const race = watch('race');
@@ -161,9 +172,11 @@ export function PatientForm({ open, onOpenChange, patient }: PatientFormProps) {
           neighborhood: patient.neighborhood,
           city: patient.city,
           state: patient.state || '',
-          reference: patient.reference || '',
           notes: patient.notes || '',
           status: patient.status,
+          aiCommunication: patient.aiCommunication ?? true,
+          preferredChannel: patient.preferredChannel ?? 'whatsapp',
+          aiFrequency: patient.aiFrequency ?? 'somente_consultas',
         });
         setAttachments(patient.attachments || []);
       } else {
@@ -209,10 +222,14 @@ export function PatientForm({ open, onOpenChange, patient }: PatientFormProps) {
         toast.success('Paciente cadastrado com sucesso!');
       }
       onOpenChange(false);
+      setCurrentStep(1);
     } catch {
       toast.error('Erro ao salvar paciente');
     }
   });
+
+  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 3));
+  const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   const handleCEPChange = async (cep: string) => {
     const cleanCEP = cep.replace(/\D/g, '');
@@ -271,13 +288,36 @@ export function PatientForm({ open, onOpenChange, patient }: PatientFormProps) {
       }
       open={open}
       onOpenChange={onOpenChange}
-      onSubmit={onSubmitForm}
-      isLoading={isSubmitting}
-      submitLabel={patient ? 'Salvar alterações' : 'Cadastrar paciente'}
+      onSubmit={() => {}}
+      footer={
+        <div className="flex items-center justify-between w-full px-6 py-4 border-t">
+          <div className="text-sm text-muted-foreground">
+            Etapa {currentStep} de {steps.length}: {steps[currentStep - 1].title}
+          </div>
+          <div className="flex gap-2">
+            {currentStep > 1 && (
+              <Button type="button" variant="outline" onClick={prevStep}>
+                Anterior
+              </Button>
+            )}
+            {currentStep < steps.length ? (
+              <Button type="button" onClick={nextStep}>
+                Próximo
+              </Button>
+            ) : (
+              <Button type="button" onClick={onSubmitForm} disabled={isSubmitting}>
+                {isSubmitting ? 'Salvando...' : 'Salvar'}
+              </Button>
+            )}
+          </div>
+        </div>
+      }
     >
       <div className="space-y-4">
+        <Progress value={(currentStep / steps.length) * 100} className="mb-4" />
         {/* Dados Pessoais */}
-        <FormSection title="Dados Pessoais" icon={<User className="h-4 w-4" />} defaultOpen={true}>
+
+          <FormSection title="Dados Pessoais" icon={<User className="h-4 w-4" />} defaultOpen={true}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label htmlFor="name">Nome completo *</Label>
@@ -551,7 +591,7 @@ export function PatientForm({ open, onOpenChange, patient }: PatientFormProps) {
         </FormSection>
 
         {/* Contato */}
-        <FormSection title="Contato" icon={<Phone className="h-4 w-4" />} defaultOpen={true}>
+          <FormSection title="Contato" icon={<Phone className="h-4 w-4" />} defaultOpen={true}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="cellphone">Celular *</Label>
@@ -713,6 +753,56 @@ export function PatientForm({ open, onOpenChange, patient }: PatientFormProps) {
                   Adicionar anexo
                 </Button>
               </div>
+            </div>
+          </div>
+        </FormSection>
+
+        {/* Preferências e IA */}
+        <FormSection title="Preferências e IA" icon={<Heart className="h-4 w-4" />} defaultOpen={true}>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Switch
+                id="aiCommunication"
+                checked={watch('aiCommunication')}
+                onCheckedChange={(checked) => setValue('aiCommunication', checked)}
+              />
+              <Label htmlFor="aiCommunication" className="cursor-pointer">
+                Comunicação via IA
+              </Label>
+            </div>
+
+            <div>
+              <Label htmlFor="preferredChannel">Canal preferido</Label>
+              <Select
+                value={watch('preferredChannel')}
+                onValueChange={(value) => setValue('preferredChannel', value as PatientFormData['preferredChannel'])}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="sms">SMS</SelectItem>
+                  <SelectItem value="email">E-mail</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="aiFrequency">Frequência de comunicação IA</Label>
+              <Select
+                value={watch('aiFrequency')}
+                onValueChange={(value) => setValue('aiFrequency', value as PatientFormData['aiFrequency'])}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="somente_consultas">Somente consultas</SelectItem>
+                  <SelectItem value="lembretes">Lembretes</SelectItem>
+                  <SelectItem value="todos">Todos os comunicados</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </FormSection>

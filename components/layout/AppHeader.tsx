@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, User } from 'lucide-react';
+import { Search, User, LogOut } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,6 +19,13 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ sidebarCollapsed }: AppHeaderProps) {
+  const handleLogout = () => {
+    // Remove o token de autenticação
+    document.cookie = 'authToken=; path=/; max-age=0';
+    
+    // Redireciona para login
+    window.location.href = '/login';
+  };
   return (
     <header
       className={cn(
@@ -68,7 +75,10 @@ export function AppHeader({ sidebarCollapsed }: AppHeaderProps) {
             </DropdownMenuItem>
             <DropdownMenuItem>Configurações</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-[var(--color-error)]">Sair</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout} className="text-[var(--color-error)]">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
