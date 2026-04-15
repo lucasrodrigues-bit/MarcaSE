@@ -11,8 +11,10 @@ node_modules
 .next/
 .DS_Store
 
+
 # Docker
 Dockerfile
 docker-compose.yml
 .dockerignore
 documentos_projeto/documentosUteis.md
+
