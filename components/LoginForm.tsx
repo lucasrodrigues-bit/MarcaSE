@@ -60,19 +60,19 @@ export function LoginForm({ children }: LoginFormProps) {
     let redirectPath = "";
     switch (selectedDashboardRole) {
       case "gestor":
-        redirectPath = "/manager/dashboard";
+        redirectPath = "#";
         break;
       case "admin":
-        redirectPath = "/manager/dashboard";
+        redirectPath = "#";
         break;
       case "medico":
-        redirectPath = "/doctor/dashboard";
+        redirectPath = "#";
         break;
       case "secretaria":
-        redirectPath = "/secretary/dashboard";
+        redirectPath = "#";
         break;
       case "paciente":
-        redirectPath = "/patient/dashboard";
+        redirectPath = "#";
         break;
     }
 
