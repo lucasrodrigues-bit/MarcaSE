@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useState, type ReactNode } from 'react';
 import type { Doctor, Patient, DoctorAction, PatientAction } from '@/types';
+import { doctorsService } from '@/services/doctorsApi.mjs';
+import { patientsService } from '@/services/patientsApi.mjs';
 
 // Doctor Reducer
 function doctorReducer(state: Doctor[], action: DoctorAction): Doctor[] {
@@ -41,103 +43,81 @@ interface DataContextType {
   isLoaded: boolean;
   dispatchDoctors: React.Dispatch<DoctorAction>;
   dispatchPatients: React.Dispatch<PatientAction>;
-  addDoctor: (doctor: Omit<Doctor, 'id' | 'createdAt'>) => void;
-  updateDoctor: (doctor: Doctor) => void;
-  deleteDoctor: (id: string) => void;
-  addPatient: (patient: Omit<Patient, 'id' | 'createdAt'>) => void;
-  updatePatient: (patient: Patient) => void;
-  deletePatient: (id: string) => void;
+  addDoctor: (doctor: Omit<Doctor, 'id' | 'createdAt'>) => Promise<void>;
+  updateDoctor: (doctor: Doctor) => Promise<void>;
+  deleteDoctor: (id: string) => Promise<void>;
+  addPatient: (patient: Omit<Patient, 'id' | 'createdAt'>) => Promise<void>;
+  updatePatient: (patient: Patient) => Promise<void>;
+  deletePatient: (id: string) => Promise<void>;
   checkDuplicateCPF: (cpf: string, excludeId?: string) => boolean;
   checkDuplicateCRM: (crm: string, excludeId?: string) => boolean;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-const DOCTORS_KEY = 'marcaSE_doctors';
-const PATIENTS_KEY = 'marcaSE_patients';
-
 export function DataProvider({ children }: { children: ReactNode }) {
   const [doctors, dispatchDoctors] = useReducer(doctorReducer, []);
   const [patients, dispatchPatients] = useReducer(patientReducer, []);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from localStorage on mount - start with empty arrays if nothing saved
+  // Carrega médicos e pacientes da API ao iniciar
   useEffect(() => {
-    const storedDoctors = localStorage.getItem(DOCTORS_KEY);
-    const storedPatients = localStorage.getItem(PATIENTS_KEY);
-
-    if (storedDoctors) {
+    async function loadData() {
       try {
-        dispatchDoctors({ type: 'SET_DOCTORS', payload: JSON.parse(storedDoctors) });
-      } catch {
-        dispatchDoctors({ type: 'SET_DOCTORS', payload: [] });
+        const [doctorsData, patientsData] = await Promise.all([
+          doctorsService.list(),
+          patientsService.list(),
+        ]);
+        dispatchDoctors({ type: 'SET_DOCTORS', payload: doctorsData ?? [] });
+        dispatchPatients({ type: 'SET_PATIENTS', payload: patientsData ?? [] });
+      } catch (error) {
+        console.error('Erro ao carregar dados da API:', error);
+      } finally {
+        setIsLoaded(true);
       }
-    } else {
-      localStorage.setItem(DOCTORS_KEY, JSON.stringify([]));
     }
-
-    if (storedPatients) {
-      try {
-        dispatchPatients({ type: 'SET_PATIENTS', payload: JSON.parse(storedPatients) });
-      } catch {
-        dispatchPatients({ type: 'SET_PATIENTS', payload: [] });
-      }
-    } else {
-      localStorage.setItem(PATIENTS_KEY, JSON.stringify([]));
-    }
-
-    setIsLoaded(true);
+    loadData();
   }, []);
 
-  // Save to localStorage on changes (including empty arrays)
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem(DOCTORS_KEY, JSON.stringify(doctors));
-    }
-  }, [doctors, isLoaded]);
-
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem(PATIENTS_KEY, JSON.stringify(patients));
-    }
-  }, [patients, isLoaded]);
-
-  const addDoctor = (doctor: Omit<Doctor, 'id' | 'createdAt'>) => {
-    const newDoctor: Doctor = {
-      ...doctor,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-    };
+  // ── MÉDICOS ──────────────────────────────────────────────
+  const addDoctor = async (doctor: Omit<Doctor, 'id' | 'createdAt'>) => {
+    const newDoctor = await doctorsService.create(doctor);
     dispatchDoctors({ type: 'ADD_DOCTOR', payload: newDoctor });
   };
 
-  const updateDoctor = (doctor: Doctor) => {
-    const updatedDoctor = { ...doctor, updatedAt: new Date().toISOString() };
-    dispatchDoctors({ type: 'UPDATE_DOCTOR', payload: updatedDoctor });
+  const updateDoctor = async (doctor: Doctor) => {
+    const updated = await doctorsService.update(doctor.id, {
+      ...doctor,
+      updatedAt: new Date().toISOString(),
+    });
+    dispatchDoctors({ type: 'UPDATE_DOCTOR', payload: updated ?? doctor });
   };
 
-  const deleteDoctor = (id: string) => {
+  const deleteDoctor = async (id: string) => {
+    await doctorsService.delete(id);
     dispatchDoctors({ type: 'DELETE_DOCTOR', payload: id });
   };
 
-  const addPatient = (patient: Omit<Patient, 'id' | 'createdAt'>) => {
-    const newPatient: Patient = {
-      ...patient,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-    };
+  // ── PACIENTES ─────────────────────────────────────────────
+  const addPatient = async (patient: Omit<Patient, 'id' | 'createdAt'>) => {
+    const newPatient = await patientsService.create(patient);
     dispatchPatients({ type: 'ADD_PATIENT', payload: newPatient });
   };
 
-  const updatePatient = (patient: Patient) => {
-    const updatedPatient = { ...patient, updatedAt: new Date().toISOString() };
-    dispatchPatients({ type: 'UPDATE_PATIENT', payload: updatedPatient });
+  const updatePatient = async (patient: Patient) => {
+    const updated = await patientsService.update(patient.id, {
+      ...patient,
+      updatedAt: new Date().toISOString(),
+    });
+    dispatchPatients({ type: 'UPDATE_PATIENT', payload: updated ?? patient });
   };
 
-  const deletePatient = (id: string) => {
+  const deletePatient = async (id: string) => {
+    await patientsService.delete(id);
     dispatchPatients({ type: 'DELETE_PATIENT', payload: id });
   };
 
+  // ── VALIDAÇÕES ────────────────────────────────────────────
   const checkDuplicateCPF = (cpf: string, excludeId?: string): boolean => {
     const cleanCPF = cpf.replace(/\D/g, '');
     return patients.some((p) => {
