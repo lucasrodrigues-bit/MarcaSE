@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Save, Loader2 } from "lucide-react";
 import { usersService } from "@/services/usersApi.mjs";
 import { doctorsService } from "@/services/doctorsApi.mjs";
-import { isValidCPF } from "@/lib/utils";
+import { login } from "services/api.mjs";
+import { isValidCPF } from "@/lib/utils"; // 1. IMPORTAÇÃO DA FUNÇÃO DE VALIDAÇÃO
 import Sidebar from "@/components/Sidebar";
 
 interface UserFormData {

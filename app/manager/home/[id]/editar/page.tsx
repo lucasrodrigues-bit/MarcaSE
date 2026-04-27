@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Save, Loader2, ArrowLeft } from "lucide-react"
 import Sidebar from "@/components/Sidebar"
-import { doctorsService } from "@/services/doctorsApi.mjs";
+import { doctorsService } from "services/doctorsApi.mjs";
 
 const UF_LIST = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"];
 

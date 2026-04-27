@@ -1,4 +1,4 @@
-
+// ARQUIVO: lib/utils.ts
 
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -7,9 +7,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// ADICIONE A FUNÇÃO ABAIXO
 export function isValidCPF(cpf: string | null | undefined): boolean {
   if (!cpf) return false;
 
+  // Remove caracteres não numéricos
   const cpfDigits = cpf.replace(/\D/g, '');
 
   if (cpfDigits.length !== 11 || /^(\d)\1+$/.test(cpfDigits)) {

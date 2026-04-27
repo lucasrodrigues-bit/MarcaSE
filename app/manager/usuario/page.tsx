@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"; // <--- 1. Importação Adicionada
 import { Plus, Eye, Filter, Loader2, Search } from "lucide-react"; // <--- 1. Ícone Search Adicionado
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { api, login } from "@/services/api.mjs";
-import { usersService } from "@/services/usersApi.mjs";
+import { api, login } from "services/api.mjs";
+import { usersService } from "services/usersApi.mjs";
 import Sidebar from "@/components/Sidebar";
 
 interface FlatUser {

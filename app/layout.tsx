@@ -1,53 +1,23 @@
-import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
-
-const inter = Inter({ 
-  subsets: ["latin"],
-  variable: '--font-inter',
-})
-
-export const metadata: Metadata = {
-  title: 'MarcaSE - Sistema de Gestão de Saúde',
-  description: 'Sistema de agendamento e gestão para clínicas públicas do Brasil',
-  generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
-  },
-}
-
-export const viewport: Viewport = {
-  themeColor: '#2A6FDB',
-  width: 'device-width',
-  initialScale: 1,
-}
+import type { Metadata } from "next";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { Analytics } from "@vercel/analytics/next";
+import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
+import { Providers } from "./providers";
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="pt-BR">
-      <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
-        <Analytics />
-      </body>
-    </html>
-  )
+    return (
+        <html lang="en" suppressHydrationWarning>
+            <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+                <Providers>{children}</Providers>
+                <Analytics />
+                <Toaster />
+            </body>
+        </html>
+    );
 }

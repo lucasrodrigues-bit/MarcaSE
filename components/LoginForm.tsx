@@ -1,3 +1,5 @@
+// ARQUIVO COMPLETO E CORRIGIDO PARA: components/LoginForm.tsx
+
 "use client";
 
 import type React from "react";
@@ -66,13 +68,13 @@ export function LoginForm({ children }: LoginFormProps) {
         redirectPath = "/manager/dashboard";
         break;
       case "medico":
-        redirectPath = "#";
+        redirectPath = "/doctor/dashboard";
         break;
       case "secretaria":
-        redirectPath = "#";
+        redirectPath = "/secretary/dashboard";
         break;
       case "paciente":
-        redirectPath = "#";
+        redirectPath = "/patient/dashboard";
         break;
     }
 
@@ -102,7 +104,7 @@ export function LoginForm({ children }: LoginFormProps) {
       }
 
       const rolesData = await api.get(
-        `/rest/v1/user_roles?user_id=eq.${user.id}&select=role`,
+        `/rest/v1/user_roles?user_id=eq.${user.id}&select=role`
       );
 
       const me = await usersService.getMeSimple();
@@ -110,7 +112,7 @@ export function LoginForm({ children }: LoginFormProps) {
 
       if (!me.roles || me.roles.length === 0) {
         throw new Error(
-          "Nenhum perfil de acesso foi encontrado para este usuário.",
+          "Nenhum perfil de acesso foi encontrado para este usuário."
         );
       }
 
