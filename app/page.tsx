@@ -1,215 +1,155 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { Stethoscope, Baby, Microscope } from "lucide-react";
-import { useAccessibility } from "./context/AccessibilityContext";
+import Link from "next/link"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Stethoscope, CalendarCheck, Users } from "lucide-react"
 
-export default function InicialPage() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { contrast } = useAccessibility();
-
-  const heroClass = contrast === "high"
-    ? "px-6 md:px-10 lg:px-20 py-20 bg-background text-foreground border-y-2 border-primary"
-    : "px-6 md:px-10 lg:px-20 py-20 bg-gradient-to-r from-[#1E2A78] via-[#007BFF] to-[#00BFFF] text-white";
-
+export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col bg-background font-sans scroll-smooth text-foreground">
-      {/* Barra superior */}
-      <div className="bg-primary text-primary-foreground text-sm py-2 px-4 md:px-6 flex justify-between items-center">
-        <span className="hidden sm:inline">Horário: 08h00 - 21h00</span>
-        <span className="hover:underline cursor-pointer transition">
-          Email: contato@mediconnect.com
-        </span>
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
+
+      {/* TOP BAR */}
+      <div className="bg-primary text-primary-foreground text-xs py-2 px-4 flex justify-between">
+        <span>08h00 - 21h00</span>
+        <span>contato@marcase.com</span>
       </div>
-      {/* Header */}
-      <header className="bg-muted text-foreground shadow-md py-4 px-4 md:px-6 flex justify-between items-center relative sticky top-0 z-50 backdrop-blur-md">
-        <a href="#home" className="flex items-center space-x-2 cursor-pointer">
-          <img
-            src="/android-chrome-512x512.png"
-            alt="Logo MediConnect"
-            className="w-20 h-20 object-contain transition-transform hover:scale-105"
+
+      {/* HEADER */}
+      <header className="h-[70px] border-b bg-white/70 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-50">
+        
+        {/* LOGO + NOME */}
+        <div className="flex items-center gap-3">
+          <Image
+            src="/Logo MedConnect.png"
+            alt="MarcaSE Logo"
+            width={40}
+            height={40}
+            className="object-contain"
           />
-          <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
-            MedConnect
-          </h1>
-        </a>
-
-        {/* Menu Mobile */}
-        <div className="md:hidden flex items-center space-x-4">
-          <Link href="/login">
-            <Button
-              variant="outline"
-              className="rounded-full px-4 py-2 text-sm border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition"
-            >
-              Login
-            </Button>
-          </Link>
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="text-[#1E2A78] focus:outline-none"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {isMenuOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                ></path>
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16M4 18h16"
-                ></path>
-              )}
-            </svg>
-          </button>
+          <span className="font-semibold text-xl tracking-tight">
+            MarcaSE
+          </span>
         </div>
 
-        {/* Navegação */}
-        <nav
-          className={`${
-            isMenuOpen ? "block" : "hidden"
-          } absolute top-[76px] left-0 w-full bg-white shadow-md py-4 md:relative md:top-auto md:left-auto md:w-auto md:block md:bg-transparent md:shadow-none transition-all duration-300 z-10`}
-        >
-          <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-8 text-foreground font-medium items-center">
-            <Link href="#home" className="hover:text-primary transition">
-              Home
-            </Link>
-            <a href="#about" className="hover:text-primary transition">
-              Sobre
-            </a>
-            <a href="#departments" className="hover:text-primary transition">
-              Departamentos
-            </a>
-            <a href="#doctors" className="hover:text-primary transition">
-              Médicos
-            </a>
-            <a href="#contact" className="hover:text-primary transition">
-              Contato
-            </a>
-          </div>
-        </nav>
-
-        {/* Login Desktop */}
-        <div className="hidden md:flex space-x-4">
-          <Link href="/login">
-            <Button
-              variant="outline"
-              className="rounded-full px-6 py-2 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition cursor-pointer"
-            >
-              Login
-            </Button>
-          </Link>
-        </div>
+        {/* LOGIN */}
+        <Link href="/login">
+          <Button className="rounded-full px-6 shadow-md hover:shadow-lg transition-all">
+            Entrar
+          </Button>
+        </Link>
       </header>
-      {/* Hero Section */}
-      <section className={`flex flex-col md:flex-row items-center justify-between ${heroClass}`}>
-        <div className="max-w-lg mx-auto md:mx-0">
-          <h2 className="uppercase text-sm tracking-widest opacity-80">
-            Bem-vindo à Saúde Digital
-          </h2>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mt-2 drop-shadow-lg">
-            Soluções Médicas <br /> & Cuidados com a Saúde
-          </h1>
-          <p className="mt-4 text-base leading-relaxed opacity-90 text-foreground">
-            Excelência em saúde há mais de 25 anos. Atendimento médico com
-            qualidade, segurança e carinho.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center md:justify-start">
-            <Button className="px-8 py-3 text-base font-semibold bg-card text-card-foreground hover:bg-muted transition-all shadow-md">
-              Nossos Serviços
-            </Button>
-            <Button className="px-8 py-3 text-base font-semibold bg-card text-card-foreground hover:bg-muted transition-all shadow-md">
-              Saiba Mais
-            </Button>
-          </div>
-        </div>
-        <div className="mt-10 md:mt-0 flex justify-center">
-          <img
-            src="https://t4.ftcdn.net/jpg/03/20/52/31/360_F_320523164_tx7Rdd7I2XDTvvKfz2oRuRpKOPE5z0ni.jpg"
-            alt="Médico"
-            className="w-72 sm:w-96 lg:w-[28rem] h-auto object-cover rounded-2xl shadow-xl "
-          />
-        </div>
-      </section>
-      {/* Serviços */}
-      <section
-        id="departments"
-        className="py-20 px-6 md:px-10 lg:px-20 bg-secondary"
-      >
-        <h2 className="text-center text-3xl sm:text-4xl font-extrabold text-foreground">
-          Cuidados completos para a sua saúde
-        </h2>
-        <p className="text-center text-muted-foreground mt-3 text-base">
-          Serviços médicos que oferecemos
-        </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mt-12 max-w-6xl mx-auto">
-          {/* Card */}
-          {[
-            {
-              title: "Clínica Geral",
-              desc: "Seu primeiro passo para o cuidado. Atendimento focado na prevenção e no diagnóstico inicial.",
-              Icon: Stethoscope,
-            },
-            {
-              title: "Pediatria",
-              desc: "Cuidado gentil e especializado para garantir a saúde e o desenvolvimento de crianças e adolescentes.",
-              Icon: Baby,
-            },
-            {
-              title: "Exames",
-              desc: "Resultados rápidos e precisos em exames laboratoriais e de imagem essenciais para seu diagnóstico.",
-              Icon: Microscope,
-            },
-          ].map(({ title, desc, Icon }, index) => (
-            <div
-              key={index}
-              className="p-8 bg-card rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-border group"
-            >
-              <div className="flex items-center space-x-3">
-                <Icon className="text-primary w-6 h-6 group-hover:scale-110 transition-transform" />
-                <h3 className="text-xl font-semibold">{title}</h3>
-              </div>
-              <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
-                {desc}
-              </p>
-              <Button className="mt-6 w-full bg-primary hover:opacity-90 text-primary-foreground transition">
-                Agendar
+      {/* HERO */}
+      <section className="flex-1 flex items-center justify-center px-6 md:px-12 py-16 relative overflow-hidden">
+
+        {/* BACKGROUND GRADIENT */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-blue-400/10 to-transparent pointer-events-none" />
+
+        <div className="max-w-6xl w-full grid md:grid-cols-2 gap-12 items-center relative z-10">
+
+          {/* TEXTO */}
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+              Gestão inteligente para clínicas modernas
+            </h1>
+
+            <p className="mt-5 text-muted-foreground text-lg leading-relaxed">
+              Controle pacientes, agendamentos e atendimentos com eficiência.
+              Um sistema simples, rápido e profissional.
+            </p>
+
+            <div className="mt-8 flex gap-4 flex-wrap">
+              <Link href="/login">
+                <Button size="lg" className="shadow-lg hover:scale-[1.02] transition-all">
+                  Acessar sistema
+                </Button>
+              </Link>
+
+              <Button
+                variant="outline"
+                size="lg"
+                className="hover:bg-muted transition-all"
+              >
+                Ver funcionalidades
               </Button>
             </div>
-          ))}
+          </div>
+
+          {/* CARD VISUAL (SUBSTITUI IMAGEM GENÉRICA) */}
+          <div className="flex justify-center">
+  <div className="relative w-full max-w-md h-[320px] rounded-2xl overflow-hidden shadow-2xl group">
+    
+    <Image
+      src="https://t4.ftcdn.net/jpg/03/20/52/31/360_F_320523164_tx7Rdd7I2XDTvvKfz2oRuRpKOPE5z0ni.jpg"
+      alt="Preview do sistema"
+      fill
+      className="object-cover group-hover:scale-105 transition-all duration-500"
+      priority
+    />
+
+    {/* Overlay elegante */}
+    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+
+    {/* Texto sutil */}
+    <div className="absolute bottom-4 left-4 text-white text-sm opacity-90">
+      Interface do sistema
+    </div>
+  </div>
+</div>
+
         </div>
       </section>
-      {/* Footer */}
-      <footer className="bg-primary text-primary-foreground py-8 text-center text-sm border-t-2 border-primary-foreground/20">
-        <div className="space-y-2">
-          <p>© 2025 MediConnect — Todos os direitos reservados</p>
-          <div className="flex justify-center space-x-6 opacity-90">
-            <a href="#about" className="hover:opacity-70 transition">
-              Sobre
-            </a>
-            <a href="#departments" className="hover:opacity-70 transition">
-              Serviços
-            </a>
-            <a href="#contact" className="hover:opacity-70 transition">
-              Contato
-            </a>
-          </div>
+
+      {/* FEATURES */}
+      <section className="px-6 md:px-12 pb-20">
+        <div className="max-w-6xl mx-auto grid gap-6 md:grid-cols-3">
+
+          <Card className="rounded-2xl shadow-sm hover:shadow-xl transition-all border">
+            <CardContent className="p-6">
+              <Stethoscope className="text-primary mb-4" />
+              <h3 className="font-semibold text-lg">
+                Atendimentos
+              </h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                Gerencie consultas e histórico médico com facilidade.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl shadow-sm hover:shadow-xl transition-all border">
+            <CardContent className="p-6">
+              <CalendarCheck className="text-primary mb-4" />
+              <h3 className="font-semibold text-lg">
+                Agendamentos
+              </h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                Organização completa da agenda da clínica.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl shadow-sm hover:shadow-xl transition-all border">
+            <CardContent className="p-6">
+              <Users className="text-primary mb-4" />
+              <h3 className="font-semibold text-lg">
+                Pacientes
+              </h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                Cadastro e controle inteligente de clientes.
+              </p>
+            </CardContent>
+          </Card>
+
         </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="border-t py-6 text-center text-sm text-muted-foreground">
+        © {new Date().getFullYear()} MarcaSE — Sistema de gestão clínica
       </footer>
-         
+
     </div>
-  );
+  )
 }
