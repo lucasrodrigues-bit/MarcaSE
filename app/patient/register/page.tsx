@@ -96,7 +96,7 @@ export default function PatientRegister() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl text-foreground">Crie sua Conta de Paciente</CardTitle>
-            <CardDescription className="text-muted-foreground">Preencha seus dados para acessar o portal MedConnect</CardDescription>
+            <CardDescription className="text-muted-foreground">Preencha seus dados para acessar o portal MarcaSE</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleRegister} className="space-y-4">

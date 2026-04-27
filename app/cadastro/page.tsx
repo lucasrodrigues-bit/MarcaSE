@@ -10,7 +10,7 @@ export default function HomePage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-foreground mb-4">Central de Operações <br>
           </br>
-          MediConnect
+          MarcaSE
 
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

@@ -300,13 +300,13 @@ export default function Sidebar({ children }: SidebarProps) {
               <div className="bg-background p-1 rounded-lg">
                 <img
                   src="/Logo MedConnect.png"
-                  alt="Logo MedConnect"
+                  alt="Logo MarcaSE"
                   className="w-12 h-12 object-contain"
                 />
               </div>
 
               <span className="font-semibold text-lg">
-                MedConnect
+                MarcaSE
               </span>
             </div>
           )}

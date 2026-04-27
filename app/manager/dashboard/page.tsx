@@ -11,10 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Clock, Plus, User } from "lucide-react"; // Removi 'Calendar' que não estava sendo usado
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
-import { usersService } from "services/usersApi.mjs";
-import { doctorsService } from "services/doctorsApi.mjs";
+import { usersService } from "@/services/usersApi.mjs";
+import { doctorsService } from "@/services/doctorsApi.mjs";
 import Sidebar from "@/components/Sidebar";
-import { api } from "services/api.mjs"; // <-- ADICIONEI ESTE IMPORT
+import { api } from "@/services/api.mjs"; // <-- ADICIONEI ESTE IMPORT
 
 export default function ManagerDashboard() {
   // 🔹 Estados para usuários

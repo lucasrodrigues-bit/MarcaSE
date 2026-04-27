@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Edit, Trash2, Eye, Calendar, Filter, Loader2, MoreVertical } from "lucide-react"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
-import { doctorsService } from "services/doctorsApi.mjs";
+import { doctorsService } from "@/services/doctorsApi.mjs";
 import Sidebar from "@/components/Sidebar";
 
 // --- NOVOS IMPORTS (Certifique-se que criou os arquivos no passo anterior) ---

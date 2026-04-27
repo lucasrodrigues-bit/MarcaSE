@@ -106,7 +106,7 @@ export default function LoginPage() {
                 className="w-16 h-16 object-contain" // Mesmo tamanho que usamos na página inicial
               />
               <span className="text-3xl font-extrabold text-primary">
-                MedConnect
+                MarcaSE
               </span>
             </div>
             {/* FIM: Bloco da Logo e Nome */}
@@ -117,7 +117,7 @@ export default function LoginPage() {
                 Acesse sua conta
               </h1>
               <p className="text-muted-foreground mt-2">
-                Bem-vindo(a) de volta ao MedConnect!
+                Bem-vindo(a) de volta ao MarcaSE!
               </p>
             </div>
 
@@ -151,7 +151,7 @@ export default function LoginPage() {
           {/* Usamos o componente <Image> para otimização e performance */}
           <Image
             src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070"
-            alt="Médica utilizando um tablet na clínica MedConnect"
+            alt="Médica utilizando um tablet na clínica MarcaSE"
             fill
             style={{ objectFit: "cover" }}
             priority
@@ -162,7 +162,7 @@ export default function LoginPage() {
             {/* BLOCO DE NOME ADICIONADO */}
             <div className="mb-6 border-l-4 border-primary-foreground pl-4">
               <h1 className="text-5xl font-extrabold text-primary-foreground tracking-wider">
-                MedConnect
+                MarcaSE
               </h1>
             </div>
             <h2 className="text-4xl font-bold text-primary-foreground leading-tight">
