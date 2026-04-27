@@ -82,11 +82,26 @@ interface SidebarProps {
 }
 
 const roleLabelMap: Record<string, { label: string; color: string }> = {
-  gestor:    { label: "Gestor",      color: "bg-violet-500/20 text-violet-300 border-violet-500/30" },
-  admin:     { label: "Admin",       color: "bg-violet-500/20 text-violet-300 border-violet-500/30" },
-  medico:    { label: "Médico",      color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
-  secretaria:{ label: "Secretaria",  color: "bg-sky-500/20 text-sky-300 border-sky-500/30" },
-  paciente:  { label: "Paciente",    color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+  gestor: {
+    label: "Gestor",
+    color: "bg-violet-500/20 text-violet-300 border-violet-500/30",
+  },
+  admin: {
+    label: "Admin",
+    color: "bg-violet-500/20 text-violet-300 border-violet-500/30",
+  },
+  medico: {
+    label: "Médico",
+    color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  },
+  secretaria: {
+    label: "Secretaria",
+    color: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+  },
+  paciente: {
+    label: "Paciente",
+    color: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+  },
 };
 
 export default function Sidebar({ children }: SidebarProps) {
@@ -94,7 +109,9 @@ export default function Sidebar({ children }: SidebarProps) {
   const [role, setRole] = useState<string>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-  const [avatarFullUrl, setAvatarFullUrl] = useState<string | undefined>(undefined);
+  const [avatarFullUrl, setAvatarFullUrl] = useState<string | undefined>(
+    undefined,
+  );
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -125,11 +142,16 @@ export default function Sidebar({ children }: SidebarProps) {
         setUserData({
           id: userInfo.id ?? "",
           email: userInfo.email ?? "",
-          app_metadata: { user_role: userInfo.app_metadata?.user_role ?? "patient" },
+          app_metadata: {
+            user_role: userInfo.app_metadata?.user_role ?? "patient",
+          },
           user_metadata: {
             cpf: userInfo.user_metadata?.cpf ?? "",
             email_verified: userInfo.user_metadata?.email_verified ?? false,
-            full_name: userInfo.user_metadata?.full_name || userInfo.profile?.full_name || "Usuário",
+            full_name:
+              userInfo.user_metadata?.full_name ||
+              userInfo.profile?.full_name ||
+              "Usuário",
             phone_mobile: userInfo.user_metadata?.phone_mobile ?? "",
             role: userInfo.user_metadata?.role ?? "",
             avatar_url: rawAvatarPath,
@@ -142,28 +164,43 @@ export default function Sidebar({ children }: SidebarProps) {
         if (rawAvatarPath) setAvatarFullUrl(buildAvatarUrl(rawAvatarPath));
 
         if (!rawAvatarPath || !userInfo.profile) {
-          usersService.getMe().then((freshData) => {
-            if (freshData?.profile) {
-              const freshAvatar = freshData.profile.avatar_url;
-              const updatedUserInfo = {
-                ...userInfo,
-                profile: freshData.profile,
-                user_metadata: {
-                  ...userInfo.user_metadata,
-                  avatar_url: freshAvatar || userInfo.user_metadata.avatar_url,
-                },
-              };
-              localStorage.setItem("user_info", JSON.stringify(updatedUserInfo));
-              if (freshAvatar && freshAvatar !== rawAvatarPath) {
-                setAvatarFullUrl(buildAvatarUrl(freshAvatar));
-                setUserData((prev) =>
-                  prev
-                    ? { ...prev, user_metadata: { ...prev.user_metadata, avatar_url: freshAvatar } }
-                    : undefined
+          usersService
+            .getMe()
+            .then((freshData) => {
+              if (freshData?.profile) {
+                const freshAvatar = freshData.profile.avatar_url;
+                const updatedUserInfo = {
+                  ...userInfo,
+                  profile: freshData.profile,
+                  user_metadata: {
+                    ...userInfo.user_metadata,
+                    avatar_url:
+                      freshAvatar || userInfo.user_metadata.avatar_url,
+                  },
+                };
+                localStorage.setItem(
+                  "user_info",
+                  JSON.stringify(updatedUserInfo),
                 );
+                if (freshAvatar && freshAvatar !== rawAvatarPath) {
+                  setAvatarFullUrl(buildAvatarUrl(freshAvatar));
+                  setUserData((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          user_metadata: {
+                            ...prev.user_metadata,
+                            avatar_url: freshAvatar,
+                          },
+                        }
+                      : undefined,
+                  );
+                }
               }
-            }
-          }).catch((err) => console.error("[Sidebar] Falha no auto-reparo:", err));
+            })
+            .catch((err) =>
+              console.error("[Sidebar] Falha no auto-reparo:", err),
+            );
         }
       } catch (e) {
         console.error("Erro ao processar dados do usuário na Sidebar:", e);
@@ -200,43 +237,155 @@ export default function Sidebar({ children }: SidebarProps) {
 
   const SetMenuItems = (role: any): MenuItem[] => {
     const patientItems: MenuItem[] = [
-      { href: "/patient/dashboard",    icon: LayoutDashboard, label: "Dashboard",        description: "Visão geral" },
-      { href: "/patient/schedule",     icon: CalendarPlus,    label: "Agendar Consulta", description: "Nova consulta" },
-      { href: "/patient/appointments", icon: CalendarCheck2,  label: "Minhas Consultas", description: "Histórico" },
-      { href: "/patient/reports",      icon: FileText,        label: "Meus Laudos",      description: "Documentos" },
-      { href: "/patient/profile",      icon: UserCircle,      label: "Meus Dados",       description: "Perfil" },
+      {
+        href: "/patient/dashboard",
+        icon: LayoutDashboard,
+        label: "Dashboard",
+        description: "Visão geral",
+      },
+      {
+        href: "/patient/schedule",
+        icon: CalendarPlus,
+        label: "Agendar Consulta",
+        description: "Nova consulta",
+      },
+      {
+        href: "/patient/appointments",
+        icon: CalendarCheck2,
+        label: "Minhas Consultas",
+        description: "Histórico",
+      },
+      {
+        href: "/patient/reports",
+        icon: FileText,
+        label: "Meus Laudos",
+        description: "Documentos",
+      },
+      {
+        href: "/patient/profile",
+        icon: UserCircle,
+        label: "Meus Dados",
+        description: "Perfil",
+      },
     ];
 
     const doctorItems: MenuItem[] = [
-      { href: "/doctor/dashboard",      icon: LayoutDashboard, label: "Dashboard",            description: "Visão geral" },
-      { href: "/doctor/medicos",        icon: HeartPulse,      label: "Gestão de Pacientes",  description: "Pacientes" },
-      { href: "/doctor/consultas",      icon: Stethoscope,     label: "Consultas",             description: "Atendimentos" },
-      { href: "/doctor/disponibilidade",icon: CalendarRange,   label: "Disponibilidade",       description: "Agenda" },
+      {
+        href: "/doctor/dashboard",
+        icon: LayoutDashboard,
+        label: "Dashboard",
+        description: "Visão geral",
+      },
+      {
+        href: "/doctor/medicos",
+        icon: HeartPulse,
+        label: "Gestão de Pacientes",
+        description: "Pacientes",
+      },
+      {
+        href: "/doctor/consultas",
+        icon: Stethoscope,
+        label: "Consultas",
+        description: "Atendimentos",
+      },
+      {
+        href: "/doctor/disponibilidade",
+        icon: CalendarRange,
+        label: "Disponibilidade",
+        description: "Agenda",
+      },
     ];
 
     const secretaryItems: MenuItem[] = [
-      { href: "/secretary/dashboard",    icon: LayoutDashboard, label: "Dashboard",            description: "Visão geral" },
-      { href: "/secretary/appointments", icon: CalendarCheck2,  label: "Consultas",             description: "Agendamentos" },
-      { href: "/secretary/schedule",     icon: CalendarPlus,    label: "Agendar Consulta",     description: "Nova consulta" },
-      { href: "/secretary/pacientes",    icon: Users,           label: "Gestão de Pacientes",  description: "Pacientes" },
+      {
+        href: "/secretary/dashboard",
+        icon: LayoutDashboard,
+        label: "Dashboard",
+        description: "Visão geral",
+      },
+      {
+        href: "/secretary/appointments",
+        icon: CalendarCheck2,
+        label: "Consultas",
+        description: "Agendamentos",
+      },
+      {
+        href: "/secretary/schedule",
+        icon: CalendarPlus,
+        label: "Agendar Consulta",
+        description: "Nova consulta",
+      },
+      {
+        href: "/secretary/pacientes",
+        icon: Users,
+        label: "Gestão de Pacientes",
+        description: "Pacientes",
+      },
     ];
 
     const managerItems: MenuItem[] = [
-      { href: "/manager/dashboard",       icon: LayoutDashboard, label: "Dashboard",            description: "Visão geral" },
-      { href: "/manager/usuario",         icon: UserCog,         label: "Gestão de Usuários",   description: "Usuários" },
-      { href: "/manager/home",            icon: Stethoscope,     label: "Gestão de Médicos",    description: "Médicos" },
-      { href: "/manager/pacientes",       icon: Users,           label: "Gestão de Pacientes",  description: "Pacientes" },
-      { href: "/secretary/appointments",  icon: CalendarCheck2,  label: "Consultas",             description: "Agendamentos" },
-      { href: "/manager/disponibilidade", icon: CalendarRange,   label: "Disponibilidade",       description: "Agenda" },
+      {
+        href: "/manager/dashboard",
+        icon: LayoutDashboard,  
+        label: "Dashboard",
+        description: "Visão geral",
+      },
+      {
+        href: "/manager/usuario",
+        icon: UserCog,
+        label: "Gestão de Usuários",
+        description: "Usuários",
+      },
+      {
+        href: "/manager/home",
+        icon: Stethoscope,
+        label: "Gestão de Médicos",
+        description: "Médicos",
+      },
+      {
+        href: "/manager/pacientes",
+        icon: Users,
+        label: "Gestão de Pacientes",
+        description: "Pacientes",
+      },
+      {
+        href: "/secretary/appointments",
+        icon: CalendarCheck2,
+        label: "Consultas",
+        description: "Agendamentos",
+      },
+      {
+        href: "/manager/disponibilidade",
+        icon: CalendarRange,
+        label: "Disponibilidade",
+        description: "Agenda",
+      },
+      {
+        href: "/patient/schedule",
+        icon: CalendarRange,
+        label: "Agendar Consulta",
+        description: "Agenda",
+
+      },
+       {
+        href: "/patient/reports",
+        icon: LayoutDashboard,  
+        label: "Meus Laudos",
+        description: "Visão geral",
+      },
     ];
 
     switch (role) {
       case "gestor":
-      case "admin":     return managerItems;
-      case "medico":    return doctorItems;
-      case "secretaria":return secretaryItems;
+      case "admin":
+        return managerItems;
+      case "medico":
+        return doctorItems;
+      case "secretaria":
+        return secretaryItems;
       case "paciente":
-      default:          return patientItems;
+      default:
+        return patientItems;
     }
   };
 
@@ -258,16 +407,17 @@ export default function Sidebar({ children }: SidebarProps) {
   return (
     <TooltipProvider delayDuration={0}>
       <div className="min-h-screen bg-background flex">
-
         {/* ─── SIDEBAR ─────────────────────────────────────────────── */}
         <aside
           className={`
             fixed top-0 h-screen flex flex-col z-30
             transition-all duration-300 ease-in-out
             ${sidebarCollapsed ? "w-[68px]" : "w-64"}
-            ${isDefaultMode
-              ? "bg-[#0f2d4e] text-white shadow-xl shadow-black/20"
-              : "bg-sidebar text-sidebar-foreground shadow-md"}
+            ${
+              isDefaultMode
+                ? "bg-[#0f2d4e] text-white shadow-xl shadow-black/20"
+                : "bg-sidebar text-sidebar-foreground shadow-md"
+            }
           `}
         >
           {/* ── LOGO ÁREA ─────────────────────────────────────── */}
@@ -294,7 +444,9 @@ export default function Sidebar({ children }: SidebarProps) {
                   />
                 </div>
                 <div className="flex flex-col leading-none">
-                  <span className="font-bold text-[15px] tracking-tight">MarcaSE</span>
+                  <span className="font-bold text-[15px] tracking-tight">
+                    MarcaSE
+                  </span>
                   <span
                     className={`text-[10px] font-medium tracking-widest uppercase mt-0.5
                       ${isDefaultMode ? "text-white/40" : "text-sidebar-foreground/40"}`}
@@ -327,9 +479,11 @@ export default function Sidebar({ children }: SidebarProps) {
                 onClick={() => setSidebarCollapsed(true)}
                 className={`
                   w-7 h-7 rounded-lg shrink-0 transition-colors
-                  ${isDefaultMode
-                    ? "text-white/60 hover:text-white hover:bg-white/10"
-                    : "hover:bg-sidebar-accent"}
+                  ${
+                    isDefaultMode
+                      ? "text-white/60 hover:text-white hover:bg-white/10"
+                      : "hover:bg-sidebar-accent"
+                  }
                 `}
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -344,9 +498,11 @@ export default function Sidebar({ children }: SidebarProps) {
                 className={`
                   inline-flex items-center gap-1.5 text-[10px] font-semibold
                   tracking-widest uppercase px-2.5 py-1 rounded-full border
-                  ${isDefaultMode
-                    ? "bg-white/10 text-white/70 border-white/20"
-                    : roleInfo.color}
+                  ${
+                    isDefaultMode
+                      ? "bg-white/10 text-white/70 border-white/20"
+                      : roleInfo.color
+                  }
                 `}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
@@ -374,13 +530,15 @@ export default function Sidebar({ children }: SidebarProps) {
                       relative flex items-center gap-3 rounded-xl
                       transition-all duration-150 ease-out
                       ${sidebarCollapsed ? "px-0 py-2.5 justify-center" : "px-3 py-2.5"}
-                      ${isActive
-                        ? isDefaultMode
-                          ? "bg-white/15 text-white shadow-sm"
-                          : "bg-sidebar-primary text-sidebar-primary-foreground"
-                        : isDefaultMode
-                          ? "text-white/65 hover:text-white hover:bg-white/8"
-                          : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sidebar-foreground/75"}
+                      ${
+                        isActive
+                          ? isDefaultMode
+                            ? "bg-white/15 text-white shadow-sm"
+                            : "bg-sidebar-primary text-sidebar-primary-foreground"
+                          : isDefaultMode
+                            ? "text-white/65 hover:text-white hover:bg-white/8"
+                            : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sidebar-foreground/75"
+                      }
                     `}
                     style={{
                       animationDelay: `${index * 40}ms`,
@@ -401,16 +559,21 @@ export default function Sidebar({ children }: SidebarProps) {
                       className={`
                         flex items-center justify-center w-[18px] h-[18px] shrink-0
                         transition-transform duration-150
-                        ${(isActive || isHovered) ? "scale-110" : "scale-100"}
+                        ${isActive || isHovered ? "scale-110" : "scale-100"}
                       `}
                     >
-                      <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.5 : 1.75} />
+                      <Icon
+                        className="w-[18px] h-[18px]"
+                        strokeWidth={isActive ? 2.5 : 1.75}
+                      />
                     </div>
 
                     {/* Label + Description */}
                     {!sidebarCollapsed && (
                       <div className="flex flex-col min-w-0">
-                        <span className={`text-sm leading-none ${isActive ? "font-semibold" : "font-medium"}`}>
+                        <span
+                          className={`text-sm leading-none ${isActive ? "font-semibold" : "font-medium"}`}
+                        >
                           {item.label}
                         </span>
                         {item.description && !isActive && (
@@ -430,10 +593,15 @@ export default function Sidebar({ children }: SidebarProps) {
               return sidebarCollapsed ? (
                 <Tooltip key={item.href}>
                   <TooltipTrigger asChild>{navItem}</TooltipTrigger>
-                  <TooltipContent side="right" className="flex flex-col gap-0.5">
+                  <TooltipContent
+                    side="right"
+                    className="flex flex-col gap-0.5"
+                  >
                     <span className="font-semibold text-sm">{item.label}</span>
                     {item.description && (
-                      <span className="text-xs text-muted-foreground">{item.description}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {item.description}
+                      </span>
                     )}
                   </TooltipContent>
                 </Tooltip>
@@ -454,9 +622,11 @@ export default function Sidebar({ children }: SidebarProps) {
                     onClick={() => setSidebarCollapsed(false)}
                     className={`
                       w-9 h-9 rounded-xl transition-colors
-                      ${isDefaultMode
-                        ? "text-white/50 hover:text-white hover:bg-white/10"
-                        : "hover:bg-sidebar-accent"}
+                      ${
+                        isDefaultMode
+                          ? "text-white/50 hover:text-white hover:bg-white/10"
+                          : "hover:bg-sidebar-accent"
+                      }
                     `}
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -468,7 +638,9 @@ export default function Sidebar({ children }: SidebarProps) {
           )}
 
           {/* ── DIVIDER ────────────────────────────────────────── */}
-          <div className={`mx-3 ${isDefaultMode ? "border-t border-white/10" : "border-t border-sidebar-border"}`} />
+          <div
+            className={`mx-3 ${isDefaultMode ? "border-t border-white/10" : "border-t border-sidebar-border"}`}
+          />
 
           {/* ── USER SECTION ───────────────────────────────────── */}
           <div
@@ -506,15 +678,24 @@ export default function Sidebar({ children }: SidebarProps) {
                   Confirmar Saída
                 </DialogTitle>
                 <DialogDescription className="pt-1">
-                  Deseja realmente sair do sistema? Você precisará fazer login novamente para acessar sua conta.
+                  Deseja realmente sair do sistema? Você precisará fazer login
+                  novamente para acessar sua conta.
                 </DialogDescription>
               </DialogHeader>
               <Separator />
               <DialogFooter className="flex gap-2 pt-2">
-                <Button variant="outline" onClick={cancelLogout} className="flex-1 sm:flex-none">
+                <Button
+                  variant="outline"
+                  onClick={cancelLogout}
+                  className="flex-1 sm:flex-none"
+                >
                   Cancelar
                 </Button>
-                <Button variant="destructive" onClick={confirmLogout} className="flex-1 sm:flex-none gap-2">
+                <Button
+                  variant="destructive"
+                  onClick={confirmLogout}
+                  className="flex-1 sm:flex-none gap-2"
+                >
                   <LogOut className="w-4 h-4" />
                   Sair
                 </Button>

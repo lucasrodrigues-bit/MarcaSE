@@ -22,8 +22,6 @@ export const usersService = {
         return await api.post(`/functions/v1/create-user-with-password`, data);
     },
 
-    // --- NOVA FUNÇÃO ADICIONADA AQUI ---
-    // Esta função chama o endpoint público de registro de paciente.
     async registerPatient(data) {
         // POR QUÊ? Este endpoint é público e não requer token JWT, resolvendo o erro 401.
         return await api.post("/functions/v1/register-patient", data);
