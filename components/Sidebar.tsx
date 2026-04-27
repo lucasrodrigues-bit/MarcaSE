@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Cookies from "js-cookie";
 import { api } from "@/services/api.mjs";
-import { usersService } from "@/services/usersApi.mjs"; // Importando usersService
+import { usersService } from "@/services/usersApi.mjs";
 import { useAccessibility } from "@/app/context/AccessibilityContext";
 
 import { Button } from "@/components/ui/button";
@@ -18,19 +18,31 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Home,
+  LayoutDashboard,
+  CalendarPlus,
   CalendarCheck2,
-  ClipboardPlus,
-  CalendarClock,
+  CalendarRange,
   Users,
-  SquareUser,
-  ClipboardList,
+  UserCircle,
+  UserCog,
+  FileText,
   Stethoscope,
+  HeartPulse,
+  ClipboardList,
+  Activity,
 } from "lucide-react";
 
 import SidebarUserSection from "@/components/ui/userToolTip";
@@ -62,11 +74,20 @@ interface MenuItem {
   href: string;
   icon: React.ElementType;
   label: string;
+  description?: string;
 }
 
 interface SidebarProps {
   children: React.ReactNode;
 }
+
+const roleLabelMap: Record<string, { label: string; color: string }> = {
+  gestor:    { label: "Gestor",      color: "bg-violet-500/20 text-violet-300 border-violet-500/30" },
+  admin:     { label: "Admin",       color: "bg-violet-500/20 text-violet-300 border-violet-500/30" },
+  medico:    { label: "Médico",      color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
+  secretaria:{ label: "Secretaria",  color: "bg-sky-500/20 text-sky-300 border-sky-500/30" },
+  paciente:  { label: "Paciente",    color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+};
 
 export default function Sidebar({ children }: SidebarProps) {
   const [userData, setUserData] = useState<UserData>();
@@ -74,17 +95,18 @@ export default function Sidebar({ children }: SidebarProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [avatarFullUrl, setAvatarFullUrl] = useState<string | undefined>(undefined);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
-  // Função auxiliar para construir URL
   const buildAvatarUrl = (path: string) => {
     if (!path) return undefined;
-    const baseUrl = "https://yuanqfswhberkoevtmfr.supabase.co";
-    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-    const separator = cleanPath.includes('?') ? '&' : '?';
+    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const cleanPath = path.startsWith("/") ? path.slice(1) : path;
+    const separator = cleanPath.includes("?") ? "&" : "?";
     return `${baseUrl}/storage/v1/object/avatars/${cleanPath}${separator}t=${new Date().getTime()}`;
   };
+
   const { theme, contrast } = useAccessibility();
 
   useEffect(() => {
@@ -94,21 +116,16 @@ export default function Sidebar({ children }: SidebarProps) {
     if (userInfoString && token) {
       try {
         const userInfo = JSON.parse(userInfoString);
-
-        // 1. Tenta pegar o avatar do cache local
-        let rawAvatarPath = 
-          userInfo.profile?.avatar_url || 
-          userInfo.user_metadata?.avatar_url || 
-          userInfo.app_metadata?.avatar_url || 
+        let rawAvatarPath =
+          userInfo.profile?.avatar_url ||
+          userInfo.user_metadata?.avatar_url ||
+          userInfo.app_metadata?.avatar_url ||
           "";
 
-        // Configura estado inicial com o que tem no cache
         setUserData({
           id: userInfo.id ?? "",
           email: userInfo.email ?? "",
-          app_metadata: {
-            user_role: userInfo.app_metadata?.user_role ?? "patient",
-          },
+          app_metadata: { user_role: userInfo.app_metadata?.user_role ?? "patient" },
           user_metadata: {
             cpf: userInfo.user_metadata?.cpf ?? "",
             email_verified: userInfo.user_metadata?.email_verified ?? false,
@@ -120,54 +137,37 @@ export default function Sidebar({ children }: SidebarProps) {
           identities: userInfo.identities ?? [],
           is_anonymous: userInfo.is_anonymous ?? false,
         });
-        
+
         setRole(userInfo.user_metadata?.role);
+        if (rawAvatarPath) setAvatarFullUrl(buildAvatarUrl(rawAvatarPath));
 
-        if (rawAvatarPath) {
-          setAvatarFullUrl(buildAvatarUrl(rawAvatarPath));
-        }
-
-        // 2. AUTO-REPARO: Se não tiver avatar ou profile no cache, busca na API e atualiza
         if (!rawAvatarPath || !userInfo.profile) {
-          console.log("[Sidebar] Cache incompleto. Buscando dados frescos...");
           usersService.getMe().then((freshData) => {
-            if (freshData && freshData.profile) {
+            if (freshData?.profile) {
               const freshAvatar = freshData.profile.avatar_url;
-              
-              // Atualiza o objeto local
               const updatedUserInfo = {
                 ...userInfo,
-                profile: freshData.profile, // Injeta o profile completo
+                profile: freshData.profile,
                 user_metadata: {
                   ...userInfo.user_metadata,
-                  avatar_url: freshAvatar || userInfo.user_metadata.avatar_url
-                }
+                  avatar_url: freshAvatar || userInfo.user_metadata.avatar_url,
+                },
               };
-
-              // Salva no localStorage para a próxima vez
               localStorage.setItem("user_info", JSON.stringify(updatedUserInfo));
-              console.log("[Sidebar] LocalStorage sincronizado com sucesso.");
-
-              // Atualiza visualmente se achou um avatar novo
               if (freshAvatar && freshAvatar !== rawAvatarPath) {
                 setAvatarFullUrl(buildAvatarUrl(freshAvatar));
-                // Atualiza o userData também para refletir no tooltip
-                setUserData(prev => prev ? ({
-                    ...prev,
-                    user_metadata: {
-                        ...prev.user_metadata,
-                        avatar_url: freshAvatar
-                    }
-                }) : undefined);
+                setUserData((prev) =>
+                  prev
+                    ? { ...prev, user_metadata: { ...prev.user_metadata, avatar_url: freshAvatar } }
+                    : undefined
+                );
               }
             }
-          }).catch(err => console.error("[Sidebar] Falha no auto-reparo:", err));
+          }).catch((err) => console.error("[Sidebar] Falha no auto-reparo:", err));
         }
-
       } catch (e) {
         console.error("Erro ao processar dados do usuário na Sidebar:", e);
       }
-
     } else {
       router.push("/login");
     }
@@ -175,11 +175,7 @@ export default function Sidebar({ children }: SidebarProps) {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setSidebarCollapsed(true);
-      } else {
-        setSidebarCollapsed(false);
-      }
+      setSidebarCollapsed(window.innerWidth < 1024);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -187,7 +183,6 @@ export default function Sidebar({ children }: SidebarProps) {
   }, []);
 
   const handleLogout = () => setShowLogoutDialog(true);
-
   const confirmLogout = async () => {
     try {
       await api.logout();
@@ -197,207 +192,337 @@ export default function Sidebar({ children }: SidebarProps) {
       localStorage.removeItem("user_info");
       localStorage.removeItem("token");
       Cookies.remove("access_token");
-
       setShowLogoutDialog(false);
       router.push("/");
     }
   };
-
   const cancelLogout = () => setShowLogoutDialog(false);
 
-  const SetMenuItems = (role: any) => {
+  const SetMenuItems = (role: any): MenuItem[] => {
     const patientItems: MenuItem[] = [
-      { href: "/patient/dashboard", icon: Home, label: "Dashboard" },
-      {
-        href: "/patient/schedule",
-        icon: CalendarClock,
-        label: "Agendar Consulta",
-      },
-      {
-        href: "/patient/appointments",
-        icon: CalendarCheck2,
-        label: "Minhas Consultas",
-      },
-      { href: "/patient/reports", icon: ClipboardPlus, label: "Meus Laudos" },
-      { href: "/patient/profile", icon: SquareUser, label: "Meus Dados" },
+      { href: "/patient/dashboard",    icon: LayoutDashboard, label: "Dashboard",        description: "Visão geral" },
+      { href: "/patient/schedule",     icon: CalendarPlus,    label: "Agendar Consulta", description: "Nova consulta" },
+      { href: "/patient/appointments", icon: CalendarCheck2,  label: "Minhas Consultas", description: "Histórico" },
+      { href: "/patient/reports",      icon: FileText,        label: "Meus Laudos",      description: "Documentos" },
+      { href: "/patient/profile",      icon: UserCircle,      label: "Meus Dados",       description: "Perfil" },
     ];
 
     const doctorItems: MenuItem[] = [
-      { href: "/doctor/dashboard", icon: Home, label: "Dashboard" },
-      { href: "/doctor/medicos", icon: Users, label: "Gestão de Pacientes" },
-      { href: "/doctor/consultas", icon: CalendarCheck2, label: "Consultas" },
-      {
-        href: "/doctor/disponibilidade",
-        icon: ClipboardList,
-        label: "Disponibilidade",
-      },
+      { href: "/doctor/dashboard",      icon: LayoutDashboard, label: "Dashboard",            description: "Visão geral" },
+      { href: "/doctor/medicos",        icon: HeartPulse,      label: "Gestão de Pacientes",  description: "Pacientes" },
+      { href: "/doctor/consultas",      icon: Stethoscope,     label: "Consultas",             description: "Atendimentos" },
+      { href: "/doctor/disponibilidade",icon: CalendarRange,   label: "Disponibilidade",       description: "Agenda" },
     ];
 
     const secretaryItems: MenuItem[] = [
-      { href: "/secretary/dashboard", icon: Home, label: "Dashboard" },
-      {
-        href: "/secretary/appointments",
-        icon: CalendarCheck2,
-        label: "Consultas",
-      },
-      {
-        href: "/secretary/schedule",
-        icon: CalendarClock,
-        label: "Agendar Consulta",
-      },
-      {
-        href: "/secretary/pacientes",
-        icon: Users,
-        label: "Gestão de Pacientes",
-      },
+      { href: "/secretary/dashboard",    icon: LayoutDashboard, label: "Dashboard",            description: "Visão geral" },
+      { href: "/secretary/appointments", icon: CalendarCheck2,  label: "Consultas",             description: "Agendamentos" },
+      { href: "/secretary/schedule",     icon: CalendarPlus,    label: "Agendar Consulta",     description: "Nova consulta" },
+      { href: "/secretary/pacientes",    icon: Users,           label: "Gestão de Pacientes",  description: "Pacientes" },
     ];
 
     const managerItems: MenuItem[] = [
-      { href: "/manager/dashboard", icon: Home, label: "Dashboard" },
-      { href: "/manager/usuario", icon: Users, label: "Gestão de Usuários" },
-      { href: "/manager/home", icon: Stethoscope, label: "Gestão de Médicos" },
-      { href: "/manager/pacientes", icon: Users, label: "Gestão de Pacientes" },
-      { href: "/secretary/appointments", icon: CalendarCheck2, label: "Consultas" },
-      { href: "/manager/disponibilidade", icon: ClipboardList, label: "Disponibilidade" },
+      { href: "/manager/dashboard",       icon: LayoutDashboard, label: "Dashboard",            description: "Visão geral" },
+      { href: "/manager/usuario",         icon: UserCog,         label: "Gestão de Usuários",   description: "Usuários" },
+      { href: "/manager/home",            icon: Stethoscope,     label: "Gestão de Médicos",    description: "Médicos" },
+      { href: "/manager/pacientes",       icon: Users,           label: "Gestão de Pacientes",  description: "Pacientes" },
+      { href: "/secretary/appointments",  icon: CalendarCheck2,  label: "Consultas",             description: "Agendamentos" },
+      { href: "/manager/disponibilidade", icon: CalendarRange,   label: "Disponibilidade",       description: "Agenda" },
     ];
 
     switch (role) {
       case "gestor":
-      case "admin":
-        return managerItems;
-      case "medico":
-        return doctorItems;
-      case "secretaria":
-        return secretaryItems;
+      case "admin":     return managerItems;
+      case "medico":    return doctorItems;
+      case "secretaria":return secretaryItems;
       case "paciente":
-      default:
-        return patientItems;
+      default:          return patientItems;
     }
   };
 
   const menuItems = SetMenuItems(role);
   const isDefaultMode = theme === "light" && contrast === "normal";
+  const roleInfo = role ? roleLabelMap[role] : null;
 
   if (!userData) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        Carregando...
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <Activity className="w-8 h-8 text-muted-foreground animate-pulse" />
+          <span className="text-sm text-muted-foreground">Carregando...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <div
-        className={`fixed top-0 h-screen flex flex-col z-30 transition-all duration-300
-                ${sidebarCollapsed ? "w-16" : "w-64"}
-                ${isDefaultMode ? "bg-[#123965] text-white" : "bg-sidebar text-sidebar-foreground"}`}
-      >
-        {/* TOPO */}
-        <div className={`p-4 border-b ${isDefaultMode ? "border-white/10" : "border-sidebar-border"} flex items-center justify-between`}>
-          {!sidebarCollapsed && (
-            <div className="flex items-center gap-2">
-              <div className="bg-background p-1 rounded-lg">
+    <TooltipProvider delayDuration={0}>
+      <div className="min-h-screen bg-background flex">
+
+        {/* ─── SIDEBAR ─────────────────────────────────────────────── */}
+        <aside
+          className={`
+            fixed top-0 h-screen flex flex-col z-30
+            transition-all duration-300 ease-in-out
+            ${sidebarCollapsed ? "w-[68px]" : "w-64"}
+            ${isDefaultMode
+              ? "bg-[#0f2d4e] text-white shadow-xl shadow-black/20"
+              : "bg-sidebar text-sidebar-foreground shadow-md"}
+          `}
+        >
+          {/* ── LOGO ÁREA ─────────────────────────────────────── */}
+          <div
+            className={`
+              flex items-center h-16 px-3 shrink-0
+              border-b transition-colors duration-300
+              ${isDefaultMode ? "border-white/10" : "border-sidebar-border"}
+              ${sidebarCollapsed ? "justify-center" : "justify-between"}
+            `}
+          >
+            {!sidebarCollapsed && (
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div
+                  className={`
+                    rounded-xl p-1.5 shrink-0 transition-colors
+                    ${isDefaultMode ? "bg-white/10 ring-1 ring-white/20" : "bg-background"}
+                  `}
+                >
+                  <img
+                    src="/Logo MedConnect.png"
+                    alt="Logo MarcaSE"
+                    className="w-9 h-9 object-contain"
+                  />
+                </div>
+                <div className="flex flex-col leading-none">
+                  <span className="font-bold text-[15px] tracking-tight">MarcaSE</span>
+                  <span
+                    className={`text-[10px] font-medium tracking-widest uppercase mt-0.5
+                      ${isDefaultMode ? "text-white/40" : "text-sidebar-foreground/40"}`}
+                  >
+                    Saúde Digital
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {sidebarCollapsed && (
+              <div
+                className={`
+                  rounded-xl p-1.5
+                  ${isDefaultMode ? "bg-white/10 ring-1 ring-white/20" : "bg-background"}
+                `}
+              >
                 <img
                   src="/Logo MedConnect.png"
                   alt="Logo MarcaSE"
-                  className="w-12 h-12 object-contain"
+                  className="w-8 h-8 object-contain"
                 />
               </div>
+            )}
 
-              <span className="font-semibold text-lg">
-                MarcaSE
+            {!sidebarCollapsed && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSidebarCollapsed(true)}
+                className={`
+                  w-7 h-7 rounded-lg shrink-0 transition-colors
+                  ${isDefaultMode
+                    ? "text-white/60 hover:text-white hover:bg-white/10"
+                    : "hover:bg-sidebar-accent"}
+                `}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+
+          {/* ── ROLE BADGE ─────────────────────────────────────── */}
+          {!sidebarCollapsed && roleInfo && (
+            <div className="px-4 pt-4 pb-1">
+              <span
+                className={`
+                  inline-flex items-center gap-1.5 text-[10px] font-semibold
+                  tracking-widest uppercase px-2.5 py-1 rounded-full border
+                  ${isDefaultMode
+                    ? "bg-white/10 text-white/70 border-white/20"
+                    : roleInfo.color}
+                `}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+                {roleInfo.label}
               </span>
             </div>
           )}
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className={`p-1 ${isDefaultMode ? "text-white hover:bg-white/10" : "hover:bg-sidebar-accent"} cursor-pointer`}
-          >
-            {sidebarCollapsed ? (
-              <ChevronRight className="w-5 h-5" />
-            ) : (
-              <ChevronLeft className="w-5 h-5" />
-            )}
-          </Button>
-        </div>
+          {/* ── NAVIGATION ─────────────────────────────────────── */}
+          <nav className="flex-1 px-2 py-3 overflow-y-auto flex flex-col gap-0.5 scrollbar-thin">
+            {menuItems.map((item, index) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              const isHovered = hoveredItem === item.href;
 
-        {/* MENU */}
-        <nav className="flex-1 px-3 py-6 overflow-y-auto flex flex-col gap-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-
-            return (
-              <Link key={item.label} href={item.href}>
-                <div
-                  className={`
-                        flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
-                        ${
-                          isActive
-                            ? `${isDefaultMode ? "bg-white/20 text-white font-semibold" : "bg-sidebar-primary text-sidebar-primary-foreground font-semibold"}`
-                            : `${isDefaultMode ? "text-white/80 hover:bg-white/10 hover:text-white" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}`
-                        }
-                    `}
+              const navItem = (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onMouseEnter={() => setHoveredItem(item.href)}
+                  onMouseLeave={() => setHoveredItem(null)}
                 >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  {!sidebarCollapsed && (
-                    <span className="font-medium">{item.label}</span>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
-        </nav>
+                  <div
+                    className={`
+                      relative flex items-center gap-3 rounded-xl
+                      transition-all duration-150 ease-out
+                      ${sidebarCollapsed ? "px-0 py-2.5 justify-center" : "px-3 py-2.5"}
+                      ${isActive
+                        ? isDefaultMode
+                          ? "bg-white/15 text-white shadow-sm"
+                          : "bg-sidebar-primary text-sidebar-primary-foreground"
+                        : isDefaultMode
+                          ? "text-white/65 hover:text-white hover:bg-white/8"
+                          : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sidebar-foreground/75"}
+                    `}
+                    style={{
+                      animationDelay: `${index * 40}ms`,
+                    }}
+                  >
+                    {/* Active left indicator */}
+                    {isActive && (
+                      <span
+                        className={`
+                          absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full
+                          ${isDefaultMode ? "bg-white" : "bg-sidebar-primary-foreground"}
+                        `}
+                      />
+                    )}
 
-        {/* PERFIL ORIGINAL + NOME BRANCO - CORREÇÃO DE ALINHAMENTO AQUI */}
-        <div 
+                    {/* Icon */}
+                    <div
+                      className={`
+                        flex items-center justify-center w-[18px] h-[18px] shrink-0
+                        transition-transform duration-150
+                        ${(isActive || isHovered) ? "scale-110" : "scale-100"}
+                      `}
+                    >
+                      <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.5 : 1.75} />
+                    </div>
+
+                    {/* Label + Description */}
+                    {!sidebarCollapsed && (
+                      <div className="flex flex-col min-w-0">
+                        <span className={`text-sm leading-none ${isActive ? "font-semibold" : "font-medium"}`}>
+                          {item.label}
+                        </span>
+                        {item.description && !isActive && (
+                          <span
+                            className={`text-[10px] mt-0.5 truncate
+                              ${isDefaultMode ? "text-white/35" : "text-sidebar-foreground/40"}`}
+                          >
+                            {item.description}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              );
+
+              return sidebarCollapsed ? (
+                <Tooltip key={item.href}>
+                  <TooltipTrigger asChild>{navItem}</TooltipTrigger>
+                  <TooltipContent side="right" className="flex flex-col gap-0.5">
+                    <span className="font-semibold text-sm">{item.label}</span>
+                    {item.description && (
+                      <span className="text-xs text-muted-foreground">{item.description}</span>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                navItem
+              );
+            })}
+          </nav>
+
+          {/* ── EXPAND BUTTON (collapsed state) ────────────────── */}
+          {sidebarCollapsed && (
+            <div className="flex justify-center px-2 pb-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSidebarCollapsed(false)}
+                    className={`
+                      w-9 h-9 rounded-xl transition-colors
+                      ${isDefaultMode
+                        ? "text-white/50 hover:text-white hover:bg-white/10"
+                        : "hover:bg-sidebar-accent"}
+                    `}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Expandir menu</TooltipContent>
+              </Tooltip>
+            </div>
+          )}
+
+          {/* ── DIVIDER ────────────────────────────────────────── */}
+          <div className={`mx-3 ${isDefaultMode ? "border-t border-white/10" : "border-t border-sidebar-border"}`} />
+
+          {/* ── USER SECTION ───────────────────────────────────── */}
+          <div
+            className={`
+              p-2 flex flex-col
+              ${sidebarCollapsed ? "items-center" : "items-stretch"}
+            `}
+          >
+            <SidebarUserSection
+              userData={userData}
+              sidebarCollapsed={sidebarCollapsed}
+              handleLogout={handleLogout}
+              isActive={role !== "paciente"}
+              avatarUrl={avatarFullUrl}
+            />
+          </div>
+        </aside>
+
+        {/* ─── MAIN CONTENT ────────────────────────────────────────── */}
+        <div
           className={`
-            mt-auto p-3 border-t 
-            ${isDefaultMode ? "border-white/10" : "border-sidebar-border"}
-            flex flex-col
-            ${sidebarCollapsed ? "items-center justify-center" : "items-stretch"}
+            flex-1 flex flex-col min-h-screen
+            transition-all duration-300 ease-in-out
+            ${sidebarCollapsed ? "ml-[68px]" : "ml-64"}
           `}
         >
-          <SidebarUserSection
-            userData={userData}
-            sidebarCollapsed={sidebarCollapsed}
-            handleLogout={handleLogout}
-            isActive={role !== "paciente"}
-            avatarUrl={avatarFullUrl}
-          />
+          <main className="flex-1 p-4 md:p-6">{children}</main>
+
+          {/* ── LOGOUT DIALOG ──────────────────────────────────── */}
+          <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+            <DialogContent className="sm:max-w-[400px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <LogOut className="w-5 h-5 text-destructive" />
+                  Confirmar Saída
+                </DialogTitle>
+                <DialogDescription className="pt-1">
+                  Deseja realmente sair do sistema? Você precisará fazer login novamente para acessar sua conta.
+                </DialogDescription>
+              </DialogHeader>
+              <Separator />
+              <DialogFooter className="flex gap-2 pt-2">
+                <Button variant="outline" onClick={cancelLogout} className="flex-1 sm:flex-none">
+                  Cancelar
+                </Button>
+                <Button variant="destructive" onClick={confirmLogout} className="flex-1 sm:flex-none gap-2">
+                  <LogOut className="w-4 h-4" />
+                  Sair
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
-      <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          sidebarCollapsed ? "ml-16" : "ml-64"
-        }`}
-      >
-        <main className="flex-1 p-4 md:p-6">{children}</main>
-        <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Confirmar Saída</DialogTitle>
-              <DialogDescription>
-                Deseja realmente sair do sistema? Você precisará fazer login
-                novamente.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex gap-2">
-              <Button variant="outline" onClick={cancelLogout}>
-                Cancelar
-              </Button>
-              <Button variant="destructive" onClick={confirmLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Sair
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </div>
+    </TooltipProvider>
   );
 }

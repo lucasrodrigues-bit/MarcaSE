@@ -38,38 +38,39 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  /* Azul escuro do dashboard: #0f172a → #0c1120 */
+  --background: oklch(0.13 0.04 260);       /* ~#0f172a  */
+  --foreground: oklch(0.94 0.01 240);       /* ~#e2e8f0  */
+  --card: oklch(0.17 0.035 255);            /* ~#0d1526 / slate-900/60 */
+  --card-foreground: oklch(0.94 0.01 240);
+  --popover: oklch(0.15 0.04 258);
+  --popover-foreground: oklch(0.94 0.01 240);
+  --primary: oklch(0.58 0.2 255);           /* blue-500  */
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.22 0.04 255);        /* slate-800 */
+  --secondary-foreground: oklch(0.85 0.01 240);
+  --muted: oklch(0.22 0.04 255);
+  --muted-foreground: oklch(0.56 0.02 240); /* slate-500 */
+  --accent: oklch(0.25 0.05 255);
+  --accent-foreground: oklch(0.94 0.01 240);
   --destructive: oklch(0.7 0.25 25);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  --border: oklch(0.25 0.04 255);           /* slate-800 */
+  --input: oklch(0.22 0.04 255);
+  --ring: oklch(0.58 0.2 255);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar: oklch(0.16 0.04 258);          /* azul escuro sidebar */
+  --sidebar-foreground: oklch(0.94 0.01 240);
+  --sidebar-primary: oklch(0.58 0.2 255);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --sidebar-accent: oklch(0.22 0.04 255);
+  --sidebar-accent-foreground: oklch(0.94 0.01 240);
+  --sidebar-border: oklch(0.25 0.04 255);
+  --sidebar-ring: oklch(0.58 0.2 255);
 }
 
 .high-contrast {
@@ -151,4 +152,19 @@
     @apply bg-background text-foreground;
     transition: background-color 0.3s, color 0.3s;
   }
+}
+
+/* ── Botão de Acessibilidade ─────────────────────────────────────────────── */
+/* No light theme: branco. No dark theme: azul escuro do dashboard.           */
+.accessibility-button {
+  background-color: var(--background);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+/* ── Dashboard: garante que cards usem variáveis CSS ─────────────────────── */
+/* Light: fundo branco / Dark: azul escuro #0f172a                            */
+.dark .dashboard-card {
+  background-color: color-mix(in oklch, var(--card) 80%, transparent);
+  border-color: var(--border);
 }
