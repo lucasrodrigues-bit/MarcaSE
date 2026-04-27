@@ -1,7 +1,7 @@
 // Caminho: hooks/useAuth.ts
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 // Uma interface genérica para as informações do usuário que pegamos do localStorage
 interface UserInfo {
@@ -21,8 +21,8 @@ export function useAuth() {
   const router = useRouter();
 
   useEffect(() => {
-    const userInfoString = localStorage.getItem("user_info");
-    const token = Cookies.get("access_token");
+    const userInfoString = localStorage.getItem('user_info');
+    const token = Cookies.get('access_token');
 
     if (userInfoString && token) {
       try {
@@ -30,11 +30,11 @@ export function useAuth() {
         setUser(userInfo);
       } catch (error) {
         console.error("Erro ao parsear user_info do localStorage", error);
-        router.push("/"); // Redireciona se os dados estiverem corrompidos
+        router.push('/'); // Redireciona se os dados estiverem corrompidos
       }
     } else {
       // Se não houver token ou info, redireciona para a página inicial/login
-      router.push("/");
+      router.push('/');
     }
   }, [router]);
 
