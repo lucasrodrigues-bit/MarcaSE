@@ -300,12 +300,61 @@ export default function ManagerDashboard() {
     fetchAll();
   }, []);
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // fetchAppointments
+  //
+  // 1. Busca consultas com join direto na tabela doctors (PostgREST embedded).
+  // 2. Extrai os patient_ids únicos e busca nomes na tabela profiles em uma
+  //    única requisição extra (IN filter).
+  // 3. Monta o array final com patient_name e doctor_name resolvidos.
+  // ─────────────────────────────────────────────────────────────────────────
   async function fetchAppointments() {
     try {
-      const raw = await api.get(
-        "/rest/v1/appointments?select=id,patient_id,doctor_id,scheduled_at,status,notes&order=scheduled_at.desc&limit=200",
-      );
-      if (Array.isArray(raw)) setAppointments(raw as Appointment[]);
+      // Join com doctors via PostgREST: doctor:doctors(full_name)
+      const raw = (await api.get(
+        "/rest/v1/appointments?select=id,patient_id,doctor_id,scheduled_at,status,notes,doctor:doctors(full_name)&order=scheduled_at.desc&limit=200",
+      )) as Array<{
+        id: string;
+        patient_id?: string;
+        doctor_id?: string;
+        scheduled_at: string;
+        status: Appointment["status"];
+        notes?: string;
+        doctor?: { full_name?: string } | null;
+      }>;
+
+      if (!Array.isArray(raw)) return;
+
+      // Coleta patient_ids únicos para buscar nomes de uma só vez
+      const patientIds = [
+        ...new Set(raw.map((a) => a.patient_id).filter(Boolean)),
+      ] as string[];
+
+      let profileMap = new Map<string, string>();
+      if (patientIds.length > 0) {
+        const profiles = (await api.get(
+          `/rest/v1/profiles?select=id,full_name&id=in.(${patientIds.join(",")})`,
+        )) as UserProfile[];
+        if (Array.isArray(profiles)) {
+          profileMap = new Map(profiles.map((p) => [p.id, p.full_name ?? "—"]));
+        }
+      }
+
+      const enriched: Appointment[] = raw.map((a) => ({
+        id: a.id,
+        patient_id: a.patient_id,
+        doctor_id: a.doctor_id,
+        scheduled_at: a.scheduled_at,
+        status: a.status,
+        notes: a.notes,
+        // Nomes resolvidos — nunca mais UUIDs na UI
+        patient_name: a.patient_id
+          ? (profileMap.get(a.patient_id) ?? "—")
+          : "—",
+        doctor_name: a.doctor?.full_name ?? "—",
+      }));
+
+      setAppointments(enriched);
     } catch (err) {
       console.error("Erro ao buscar agendamentos:", err);
     }
@@ -451,9 +500,7 @@ export default function ManagerDashboard() {
 
   return (
     <Sidebar>
-      <div
-        className="min-h-screen space-y-6 p-6 bg-background"
-      >
+      <div className="min-h-screen space-y-6 p-6 bg-background">
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
           <div>
@@ -778,14 +825,13 @@ export default function ManagerDashboard() {
                   color: "text-amber-400",
                 },
               ].map((m) => (
-                <Card
-                  key={m.label}
-                  className="border-border bg-card"
-                >
+                <Card key={m.label} className="border-border bg-card">
                   <CardContent className="flex items-center gap-3 p-4">
                     <m.icon className={`h-5 w-5 ${m.color}`} />
                     <div>
-                      <p className="text-xs text-muted-foreground/70">{m.label}</p>
+                      <p className="text-xs text-muted-foreground/70">
+                        {m.label}
+                      </p>
                       {loading ? (
                         <Skeleton className="h-5 w-10 bg-secondary" />
                       ) : (
@@ -825,17 +871,22 @@ export default function ManagerDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-border hover:bg-transparent">
-                        <TableHead className="text-muted-foreground/70">Data</TableHead>
+                        <TableHead className="text-muted-foreground/70">
+                          Data
+                        </TableHead>
                         <TableHead className="text-muted-foreground/70">
                           Horário
                         </TableHead>
+                        {/* ← Colunas agora exibem nomes reais */}
                         <TableHead className="text-muted-foreground/70">
-                          Paciente ID
+                          Paciente
                         </TableHead>
                         <TableHead className="text-muted-foreground/70">
-                          Médico ID
+                          Médico
                         </TableHead>
-                        <TableHead className="text-muted-foreground/70">Status</TableHead>
+                        <TableHead className="text-muted-foreground/70">
+                          Status
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -854,11 +905,12 @@ export default function ManagerDashboard() {
                             <TableCell className="text-muted-foreground">
                               {time}
                             </TableCell>
-                            <TableCell className="font-mono text-xs text-muted-foreground/70">
-                              {appt.patient_id?.slice(0, 8) ?? "—"}…
+                            {/* ← Nomes reais em vez de UUID truncado */}
+                            <TableCell className="text-sm text-foreground/80">
+                              {appt.patient_name ?? "—"}
                             </TableCell>
-                            <TableCell className="font-mono text-xs text-muted-foreground/70">
-                              {appt.doctor_id?.slice(0, 8) ?? "—"}…
+                            <TableCell className="text-sm text-foreground/80">
+                              {appt.doctor_name ?? "—"}
                             </TableCell>
                             <TableCell>
                               <AppointmentStatusBadge status={appt.status} />

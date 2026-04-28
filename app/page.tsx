@@ -4,152 +4,248 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Stethoscope, CalendarCheck, Users } from "lucide-react"
+import {
+  Stethoscope,
+  CalendarCheck,
+  Users,
+  ShieldCheck,
+  Clock,
+  BarChart2,
+  ArrowRight,
+} from "lucide-react"
+
+// ─── Dados das features principais ────────────────────────────────────────────
+
+const FEATURES = [
+  {
+    icon: Stethoscope,
+    title: "Atendimentos",
+    description:
+      "Gerencie consultas e histórico médico com facilidade. Informações centralizadas e acessíveis.",
+  },
+  {
+    icon: CalendarCheck,
+    title: "Agendamentos",
+    description:
+      "Organização completa da agenda da clínica. Reduza ausências com confirmação automática.",
+  },
+  {
+    icon: Users,
+    title: "Pacientes",
+    description:
+      "Cadastro e controle inteligente de clientes. Prontuários e históricos em um só lugar.",
+  },
+]
+
+// ─── Dados dos diferenciais (linha inferior) ──────────────────────────────────
+
+const HIGHLIGHTS = [
+  {
+    icon: ShieldCheck,
+    label: "Dados seguros",
+    description: "Criptografia e controle de acesso por perfil.",
+  },
+  {
+    icon: Clock,
+    label: "Tempo real",
+    description: "Atualizações instantâneas para toda a equipe.",
+  },
+  {
+    icon: BarChart2,
+    label: "Relatórios",
+    description: "Métricas e indicadores para decisões estratégicas.",
+  },
+]
+
+// ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
 
-      {/* TOP BAR */}
-      <div className="bg-primary text-primary-foreground text-xs py-2 px-4 flex justify-between">
-        <span>08h00 - 21h00</span>
+      {/* ── Top bar ── */}
+      <div className="bg-primary text-primary-foreground text-xs py-2 px-6 flex justify-between items-center">
+        <span>Seg – Sex: 08h00 – 21h00</span>
         <span>contato@marcase.com</span>
       </div>
 
-      {/* HEADER */}
-      <header className="h-[70px] border-b bg-white/70 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-50">
-        
-        {/* LOGO + NOME */}
+      {/* ── Header ── */}
+      <header className="h-[68px] border-b border-border bg-background/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <Image
             src="/Logo MedConnect.png"
             alt="MarcaSE Logo"
-            width={40}
-            height={40}
+            width={36}
+            height={36}
             className="object-contain"
           />
-          <span className="font-semibold text-xl tracking-tight">
+          <span className="font-bold text-xl tracking-tight text-foreground">
             MarcaSE
           </span>
         </div>
 
-        {/* LOGIN */}
         <Link href="/login">
-          <Button className="rounded-full px-6 shadow-md hover:shadow-lg transition-all">
+          <Button className="rounded-full px-6 shadow-sm hover:shadow-md transition-all gap-1.5">
             Entrar
+            <ArrowRight className="w-4 h-4" />
           </Button>
         </Link>
       </header>
 
-      {/* HERO */}
-      <section className="flex-1 flex items-center justify-center px-6 md:px-12 py-16 relative overflow-hidden">
+      {/* ── Hero ── */}
+      <section className="flex-1 flex items-center justify-center px-6 md:px-12 py-20 relative overflow-hidden">
 
-        {/* BACKGROUND GRADIENT */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-blue-400/10 to-transparent pointer-events-none" />
+        {/* Gradiente de fundo sutil */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 50% at 50% 0%, color-mix(in oklch, var(--primary) 12%, transparent), transparent)",
+          }}
+        />
 
-        <div className="max-w-6xl w-full grid md:grid-cols-2 gap-12 items-center relative z-10">
-
-          {/* TEXTO */}
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-              Gestão inteligente para clínicas modernas
-            </h1>
-
-            <p className="mt-5 text-muted-foreground text-lg leading-relaxed">
-              Controle pacientes, agendamentos e atendimentos com eficiência.
-              Um sistema simples, rápido e profissional.
-            </p>
-
-            <div className="mt-8 flex gap-4 flex-wrap">
-              <Link href="/login">
-                <Button size="lg" className="shadow-lg hover:scale-[1.02] transition-all">
-                  Acessar sistema
-                </Button>
-              </Link>
-
-              <Button
-                variant="outline"
-                size="lg"
-                className="hover:bg-muted transition-all"
-              >
-                Ver funcionalidades
-              </Button>
-            </div>
+        <div className="max-w-3xl w-full text-center relative z-10">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border bg-card text-sm text-muted-foreground mb-6">
+            <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+            Sistema de gestão clínica — Sergipe
           </div>
 
-          {/* CARD VISUAL (SUBSTITUI IMAGEM GENÉRICA) */}
-          <div className="flex justify-center">
-  <div className="relative w-full max-w-md h-[320px] rounded-2xl overflow-hidden shadow-2xl group">
-    
-    <Image
-      src="https://t4.ftcdn.net/jpg/03/20/52/31/360_F_320523164_tx7Rdd7I2XDTvvKfz2oRuRpKOPE5z0ni.jpg"
-      alt="Preview do sistema"
-      fill
-      className="object-cover group-hover:scale-105 transition-all duration-500"
-      priority
-    />
+          {/* Título */}
+          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight text-foreground">
+            Gestão inteligente
+            <br />
+            <span className="text-primary">para clínicas modernas</span>
+          </h1>
 
-    {/* Overlay elegante */}
-    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+          {/* Subtítulo */}
+          <p className="mt-6 text-muted-foreground text-lg leading-relaxed max-w-xl mx-auto">
+            Controle pacientes, agendamentos e atendimentos com eficiência.
+            Um sistema simples, rápido e profissional.
+          </p>
 
-    {/* Texto sutil */}
-    <div className="absolute bottom-4 left-4 text-white text-sm opacity-90">
-      Interface do sistema
-    </div>
-  </div>
-</div>
+          {/* CTAs */}
+          <div className="mt-10 flex gap-4 justify-center flex-wrap">
+            <Link href="/login">
+              <Button
+                size="lg"
+                className="shadow-md hover:shadow-lg hover:scale-[1.02] transition-all gap-2 px-8"
+              >
+                Acessar sistema
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="lg"
+              className="hover:bg-muted transition-all px-8"
+            >
+              Ver funcionalidades
+            </Button>
+          </div>
 
+          {/* Stats rápidas */}
+          <div className="mt-16 grid grid-cols-3 gap-6 max-w-md mx-auto">
+            {[
+              { value: "100%", label: "Web-based" },
+              { value: "24/7", label: "Disponível" },
+              { value: "LGPD", label: "Compliant" },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center">
+                <p className="text-2xl font-bold text-primary">{stat.value}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 uppercase tracking-wider">
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section className="px-6 md:px-12 pb-20">
-        <div className="max-w-6xl mx-auto grid gap-6 md:grid-cols-3">
+      {/* ── Features principais ── */}
+      <section className="px-6 md:px-12 pb-16">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-center text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-8">
+            Tudo que sua clínica precisa
+          </h2>
 
-          <Card className="rounded-2xl shadow-sm hover:shadow-xl transition-all border">
-            <CardContent className="p-6">
-              <Stethoscope className="text-primary mb-4" />
-              <h3 className="font-semibold text-lg">
-                Atendimentos
-              </h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                Gerencie consultas e histórico médico com facilidade.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl shadow-sm hover:shadow-xl transition-all border">
-            <CardContent className="p-6">
-              <CalendarCheck className="text-primary mb-4" />
-              <h3 className="font-semibold text-lg">
-                Agendamentos
-              </h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                Organização completa da agenda da clínica.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl shadow-sm hover:shadow-xl transition-all border">
-            <CardContent className="p-6">
-              <Users className="text-primary mb-4" />
-              <h3 className="font-semibold text-lg">
-                Pacientes
-              </h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                Cadastro e controle inteligente de clientes.
-              </p>
-            </CardContent>
-          </Card>
-
+          <div className="grid gap-5 md:grid-cols-3">
+            {FEATURES.map((f) => (
+              <Card
+                key={f.title}
+                className="rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all group"
+              >
+                <CardContent className="p-6">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                    <f.icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-base text-foreground mb-1.5">
+                    {f.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {f.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="border-t py-6 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} MarcaSE — Sistema de gestão clínica
+      {/* ── Diferenciais ── */}
+      <section className="border-t border-border bg-muted/30 px-6 md:px-12 py-12">
+        <div className="max-w-5xl mx-auto grid gap-8 md:grid-cols-3">
+          {HIGHLIGHTS.map((h) => (
+            <div key={h.label} className="flex items-start gap-4">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                <h.icon className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm text-foreground">{h.label}</p>
+                <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">
+                  {h.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CTA final ── */}
+      <section className="px-6 md:px-12 py-16 text-center">
+        <div className="max-w-xl mx-auto">
+          <h2 className="text-2xl font-bold text-foreground mb-3">
+            Pronto para começar?
+          </h2>
+          <p className="text-muted-foreground mb-8">
+            Acesse o sistema agora e transforme a gestão da sua clínica.
+          </p>
+          <Link href="/login">
+            <Button
+              size="lg"
+              className="shadow-md hover:shadow-lg hover:scale-[1.02] transition-all gap-2 px-10"
+            >
+              Entrar no sistema
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="border-t border-border py-6 px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <Image
+            src="/Logo MedConnect.png"
+            alt="MarcaSE"
+            width={20}
+            height={20}
+            className="object-contain opacity-60"
+          />
+          <span>MarcaSE</span>
+        </div>
+        <span>© {new Date().getFullYear()} MarcaSE — Sistema de gestão clínica</span>
       </footer>
-
     </div>
   )
 }

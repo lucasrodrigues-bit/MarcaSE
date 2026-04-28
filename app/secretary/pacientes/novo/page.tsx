@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Save, Loader2 } from "lucide-react";
-import { usersService } from "services/usersApi.mjs";
+import { usersService } from "@/services/usersApi.mjs";
 import Sidebar from "@/components/Sidebar";
 
 // Interface simplificada para refletir apenas os campos necessários
@@ -18,7 +18,7 @@ interface UserFormData {
     senha: string;
     confirmarSenha: string;
     cpf: string;
-}
+}   
 
 const defaultFormData: UserFormData = {
     email: "",

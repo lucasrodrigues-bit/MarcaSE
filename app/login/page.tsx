@@ -8,9 +8,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, X, Shield } from "lucide-react";
 import { useState } from "react";
-import RenderFromTemplateContext from "next/dist/client/components/render-from-template-context";
 
 export default function LoginPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,7 +21,6 @@ export default function LoginPage() {
   } | null>(null);
 
   const handleOpenModal = () => {
-    // Tenta pegar o email do input do formulário de login
     const emailInput = document.querySelector(
       'input[type="email"]'
     ) as HTMLInputElement;
@@ -45,9 +43,7 @@ export default function LoginPage() {
     setMessage(null);
 
     try {
-      // Chama o método que já faz o fetch corretamente
       const data = await usersService.resetPassword(email);
-
       console.log("Resposta resetPassword:", data);
 
       setMessage({
@@ -82,105 +78,91 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-        {/* PAINEL ESQUERDO: O Formulário */}
-        <div className="relative flex flex-col items-center justify-center p-8 bg-background">
-          {/* Link para Voltar */}
-          <div className="absolute top-8 left-8">
-            <Link
-              href="/"
-              className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors font-medium"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar à página inicial
-            </Link>
+      {/* ── Fundo com gradiente sutil ── */}
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background relative overflow-hidden px-4">
+
+        {/* Blob decorativo — usa a cor primária com opacity baixa */}
+        <div
+          className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full opacity-[0.06] blur-3xl pointer-events-none"
+          style={{ background: "var(--primary)" }}
+        />
+        <div
+          className="absolute -bottom-32 -right-32 w-[400px] h-[400px] rounded-full opacity-[0.05] blur-3xl pointer-events-none"
+          style={{ background: "var(--primary)" }}
+        />
+
+        {/* ── Link de volta ── */}
+        <div className="absolute top-6 left-6">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+          </Link>
+        </div>
+
+        {/* ── Card de login ── */}
+        <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-xl p-10">
+
+          {/* Logo + nome */}
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <img
+              src="/Logo MedConnect.png"
+              alt="Logo MediConnect"
+              className="w-14 h-14 object-contain"
+            />
+            <span className="text-3xl font-extrabold text-primary">
+              MarcaSE
+            </span>
           </div>
 
-          {/* O contêiner principal que agora terá a sombra e o estilo de card */}
-          <div className="w-full max-w-md bg-card p-10 rounded-2xl shadow-xl border-2 border-border mt-8">
-            {/* NOVO: Bloco da Logo e Nome (Painel Esquerdo) */}
-            <div className="flex items-center justify-center space-x-3 mb-8">
-              <img
-                src="/Logo MedConnect.png" // Caminho da sua logo
-                alt="Logo MediConnect"
-                className="w-16 h-16 object-contain" // Mesmo tamanho que usamos na página inicial
-              />
-              <span className="text-3xl font-extrabold text-primary">
-                MarcaSE
+          {/* Título */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-foreground">
+              Acesse sua conta
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1.5">
+              Bem-vindo(a) de volta ao MarcaSE!
+            </p>
+          </div>
+
+          {/* Formulário */}
+          <LoginForm>
+            <div className="mt-4 text-center text-sm">
+              <button
+                onClick={handleOpenModal}
+                className="text-muted-foreground hover:text-primary cursor-pointer underline bg-transparent border-none transition-colors"
+              >
+                Esqueceu sua senha?
+              </button>
+            </div>
+          </LoginForm>
+
+          {/* Cadastro */}
+          <div className="mt-6 text-center text-sm">
+            <span className="text-muted-foreground">
+              Não tem uma conta de paciente?{" "}
+            </span>
+            <Link href="/patient/register">
+              <span className="font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer transition-colors">
+                Crie uma agora
               </span>
-            </div>
-            {/* FIM: Bloco da Logo e Nome */}
-
-            <div className="text-center mb-8">
-              {/* Título de boas-vindas movido para baixo da logo */}
-              <h1 className="text-3xl font-bold text-foreground">
-                Acesse sua conta
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Bem-vindo(a) de volta ao MarcaSE!
-              </p>
-            </div>
-
-            <LoginForm>
-              {/* Children para o LoginForm */}
-              <div className="mt-4 text-center text-sm">
-                <button
-                  onClick={handleOpenModal}
-                  className="text-muted-foreground hover:text-primary cursor-pointer underline bg-transparent border-none"
-                >
-                  Esqueceu sua senha?
-                </button>
-              </div>
-            </LoginForm>
-
-            <div className="mt-6 text-center text-sm">
-              <span className="text-muted-foreground">
-                Não tem uma conta de paciente?{" "}
-              </span>
-              <Link href="/patient/register">
-                <span className="font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer">
-                  Crie uma agora
-                </span>
-              </Link>
-            </div>
+            </Link>
           </div>
         </div>
 
-        {/* PAINEL DIREITO: A Imagem e Branding */}
-        <div className="hidden lg:block relative">
-          {/* Usamos o componente <Image> para otimização e performance */}
-          <Image
-            src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070"
-            alt="Médica utilizando um tablet na clínica MarcaSE"
-            fill
-            style={{ objectFit: "cover" }}
-            priority
-            className="dark:opacity-80"
-          />
-          {/* Camada de sobreposição para escurecer a imagem e destacar o texto */}
-          <div className="absolute inset-0 bg-primary/80 flex flex-col items-start justify-end p-12 text-left">
-            {/* BLOCO DE NOME ADICIONADO */}
-            <div className="mb-6 border-l-4 border-primary-foreground pl-4">
-              <h1 className="text-5xl font-extrabold text-primary-foreground tracking-wider">
-                MarcaSE
-              </h1>
-            </div>
-            <h2 className="text-4xl font-bold text-primary-foreground leading-tight">
-              Tecnologia e Cuidado a Serviço da Sua Saúde.
-            </h2>
-            <p className="mt-4 text-lg text-primary-foreground/80">
-              Acesse seu portal para uma experiência de saúde integrada, segura
-              e eficiente.
-            </p>
-          </div>
+        {/* Rodapé de segurança */}
+        <div className="mt-6 flex items-center gap-1.5 text-xs text-muted-foreground/60">
+          <Shield className="w-3.5 h-3.5" />
+          <span>Conexão segura e dados protegidos</span>
         </div>
       </div>
 
-      {/* Modal de Recuperação de Senha */}
+      {/* ── Modal de Recuperação de Senha ── */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-card p-8 rounded-2xl shadow-2xl mx-4">
-            {/* Botão de fechar */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="relative w-full max-w-md bg-card border border-border p-8 rounded-2xl shadow-2xl">
             <button
               onClick={closeModal}
               className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
@@ -188,17 +170,15 @@ export default function LoginPage() {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Cabeçalho */}
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-foreground">
+              <h2 className="text-xl font-bold text-foreground">
                 Recuperar Senha
               </h2>
-              <p className="text-muted-foreground mt-2">
+              <p className="text-sm text-muted-foreground mt-1.5">
                 Insira seu e-mail e enviaremos um link para redefinir sua senha.
               </p>
             </div>
 
-            {/* Input de e-mail */}
             <div className="space-y-4">
               <div>
                 <label
@@ -215,10 +195,10 @@ export default function LoginPage() {
                   placeholder="seu@email.com"
                   disabled={isLoading}
                   className="w-full"
+                  onKeyDown={(e) => e.key === "Enter" && handleResetPassword()}
                 />
               </div>
 
-              {/* Mensagem de feedback */}
               {message && (
                 <div
                   className={`p-3 rounded-lg text-sm ${
@@ -231,19 +211,15 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {/* Botões */}
               <div className="flex gap-3 pt-2">
-                {/* Botão Cancelar – Azul contornado */}
                 <Button
                   variant="outline"
                   onClick={closeModal}
                   disabled={isLoading}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  className="flex-1"
                 >
                   Cancelar
                 </Button>
-
-                {/* Botão Resetar Senha – Azul sólido */}
                 <Button
                   onClick={handleResetPassword}
                   disabled={isLoading}
