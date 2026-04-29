@@ -1,4 +1,4 @@
-// ARQUIVO COMPLETO PARA: app/manager/usuario/novo/page.tsx
+// ARQUIVO CORRIGIDO: app/manager/usuario/novo/page.tsx
 
 "use client";
 
@@ -17,8 +17,6 @@ import {
 } from "@/components/ui/select";
 import { Save, Loader2 } from "lucide-react";
 import { usersService } from "@/services/usersApi.mjs";
-import { doctorsService } from "@/services/doctorsApi.mjs";
-import { login } from "@/services/api.mjs";
 import { isValidCPF } from "@/lib/utils";
 import Sidebar from "@/components/Sidebar";
 
@@ -64,13 +62,6 @@ const formatPhone = (value: string): string => {
 };
 
 // ─── Parser de erros da API → mensagem amigável em PT-BR ─────────────────────
-//
-// O problema original: o catch usava split('detail:"') que só funciona com
-// erros PostgREST. A Edge Function create-doctor retorna {"error":"..."} e
-// o parser não encontrava o padrão, exibindo o JSON cru para o usuário.
-//
-// Esta função resolve os dois formatos e mapeia constraint names para frases
-// legíveis.
 
 function parseApiError(rawError: unknown): string {
   const fallback =
@@ -81,14 +72,11 @@ function parseApiError(rawError: unknown): string {
 
   if (!rawMessage) return fallback;
 
-  // Extrai o texto de erro do JSON embutido na mensagem (se houver)
   let errorText = rawMessage;
   try {
     const jsonMatch = rawMessage.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-      // Edge Function → { error: "..." }
-      // PostgREST     → { message: "...", detail: "..." }
       errorText = String(
         parsed.error ?? parsed.message ?? parsed.detail ?? rawMessage,
       );
@@ -98,8 +86,6 @@ function parseApiError(rawError: unknown): string {
   }
 
   const lower = errorText.toLowerCase();
-
-  // ── Violações de unicidade ────────────────────────────────────────────────
 
   if (
     lower.includes("doctors_cpf_key") ||
@@ -128,8 +114,6 @@ function parseApiError(rawError: unknown): string {
     return "Já existe um registro com esses dados. Verifique os campos e tente novamente.";
   }
 
-  // ── Erros de autenticação ─────────────────────────────────────────────────
-
   if (
     lower.includes("user already registered") ||
     lower.includes("already been registered")
@@ -144,8 +128,6 @@ function parseApiError(rawError: unknown): string {
   if (lower.includes("invalid email")) {
     return "O e-mail informado é inválido. Verifique e tente novamente.";
   }
-
-  // ── Fallback: limpa prefixos técnicos e exibe a mensagem bruta ───────────
 
   return (
     errorText
@@ -210,24 +192,37 @@ export default function NovoUsuarioPage() {
     setIsSaving(true);
 
     try {
+      // ✅ CORREÇÃO MÉDICO:
+      // Antes: médico chamava doctorsService.create() → /functions/v1/create-doctor
+      // Esse endpoint NÃO aceita campo "password" — cria via Magic Link.
+      // Por isso o login com email+senha sempre falhava para médicos.
+      //
+      // A documentação confirma que /create-user-with-password tem o exemplo
+      // "Criar Médico com senha" e aceita role:"medico". Unificamos o fluxo:
+      // todos os papéis agora usam o mesmo endpoint com senha.
       if (formData.papel === "medico") {
-        await doctorsService.create({
-          email: formData.email.trim().toLowerCase(),
-          full_name: formData.nomeCompleto,
-          cpf: formData.cpf,
-          crm: formData.crm,
-          crm_uf: formData.crm_uf,
-          specialty: formData.specialty || null,
-          phone_mobile: formData.telefone || null,
-        });
-      } else {
-        const isPatient = formData.papel === "paciente";
         await usersService.create_user({
           email: formData.email.trim().toLowerCase(),
           password: formData.senha,
           full_name: formData.nomeCompleto,
           phone: formData.telefone || null,
-          roles: [formData.papel, "paciente"],
+          role: "medico",
+          cpf: formData.cpf,
+          crm: formData.crm,
+          crm_uf: formData.crm_uf,
+          specialty: formData.specialty || null,
+          phone_mobile: formData.telefone || null,
+          create_doctor_record: true,
+        });
+      } else {
+        const isPatient = formData.papel === "paciente";
+
+        await usersService.create_user({
+          email: formData.email.trim().toLowerCase(),
+          password: formData.senha,
+          full_name: formData.nomeCompleto,
+          phone: formData.telefone || null,
+          role: formData.papel,
           cpf: formData.cpf,
           create_patient_record: isPatient,
           phone_mobile: isPatient ? formData.telefone || null : undefined,

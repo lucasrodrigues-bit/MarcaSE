@@ -1,11 +1,11 @@
-// ARQUIVO COMPLETO E CORRIGIDO PARA: components/LoginForm.tsx
+// ARQUIVO CORRIGIDO: components/LoginForm.tsx
 
 "use client";
 
 import type React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { login, api } from "@/services/api.mjs";
+import { login } from "@/services/api.mjs";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,13 +31,9 @@ export function LoginForm({ children }: LoginFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [userRoles, setUserRoles] = useState<string[]>([]);
-  const [authenticatedUser, setAuthenticatedUser] = useState<any>(null);
-
-  /**
-   * --- NOVA FUNÇÃO ---
-   * Finaliza o login com o perfil de dashboard escolhido e redireciona.
-   */
+  // ──────────────────────────────────────────────────────────────────────────
+  // Redireciona o usuário para o dashboard correspondente ao perfil escolhido.
+  // ──────────────────────────────────────────────────────────────────────────
   const handleRoleSelection = (selectedDashboardRole: string, user: any) => {
     if (!user) {
       toast({
@@ -46,7 +42,6 @@ export function LoginForm({ children }: LoginFormProps) {
           "Não foi possível encontrar os dados do usuário. Tente novamente.",
         variant: "destructive",
       });
-      setUserRoles([]);
       return;
     }
 
@@ -59,27 +54,18 @@ export function LoginForm({ children }: LoginFormProps) {
     };
     localStorage.setItem("user_info", JSON.stringify(completeUserInfo));
 
-    let redirectPath = "";
-    switch (selectedDashboardRole) {
-      case "gestor":
-        redirectPath = "/manager/dashboard";
-        break;
-      case "admin":
-        redirectPath = "/manager/dashboard";
-        break;
-      case "medico":
-        redirectPath = "/doctor/dashboard";
-        break;
-      case "secretaria":
-        redirectPath = "/secretary/dashboard";
-        break;
-      case "paciente":
-        redirectPath = "/patient/dashboard";
-        break;
-    }
+    const dashboardMap: Record<string, string> = {
+      gestor: "/manager/dashboard",
+      admin: "/manager/dashboard",
+      medico: "/doctor/dashboard",
+      secretaria: "/secretary/dashboard",
+      paciente: "/patient/dashboard",
+    };
+
+    const redirectPath = dashboardMap[roleInLowerCase];
 
     if (redirectPath) {
-      toast({ title: `Entrando como ${selectedDashboardRole}...` });
+      toast({ title: `Entrando como ${roleInLowerCase}...` });
       router.push(redirectPath);
     } else {
       toast({
@@ -90,6 +76,9 @@ export function LoginForm({ children }: LoginFormProps) {
     }
   };
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // Submit do formulário de login.
+  // ──────────────────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -97,25 +86,39 @@ export function LoginForm({ children }: LoginFormProps) {
     localStorage.removeItem("user_info");
 
     try {
+      // 1. Autentica e obtém o token JWT
       const authData = await login(form.email, form.password);
       const user = authData.user;
+
       if (!user || !user.id) {
         throw new Error("Resposta de autenticação inválida.");
       }
 
-      const rolesData = await api.get(
-        `/rest/v1/user_roles?user_id=eq.${user.id}&select=role`
-      );
+      // ✅ CORREÇÃO BUG 1:
+      // A chamada abaixo foi REMOVIDA. Ela fazia um GET em /rest/v1/user_roles
+      // diretamente via REST, mas essa tabela possui RLS que bloqueava a query
+      // logo após o login. O erro era capturado pelo catch, apagava o token e
+      // exibia "Erro no Login" — simulando credenciais inválidas mesmo com o
+      // auth tendo funcionado corretamente. A variável `rolesData` também nunca
+      // era utilizada em lugar algum.
+      //
+      // REMOVIDO:
+      // const rolesData = await api.get(
+      //   `/rest/v1/user_roles?user_id=eq.${user.id}&select=role`
+      // );
 
+      // 2. Busca perfis do usuário via Edge Function (já autenticada)
       const me = await usersService.getMeSimple();
-      console.log(me.roles);
+      console.log("Perfis encontrados:", me.roles);
 
       if (!me.roles || me.roles.length === 0) {
         throw new Error(
-          "Nenhum perfil de acesso foi encontrado para este usuário."
+          "Nenhum perfil de acesso foi encontrado para este usuário.",
         );
       }
 
+      // 3. Se houver apenas um perfil, entra direto.
+      //    Se houver múltiplos, poderia apresentar seleção (ver estados abaixo).
       handleRoleSelection(me.roles[0], user);
     } catch (error) {
       localStorage.removeItem("token");
@@ -132,97 +135,70 @@ export function LoginForm({ children }: LoginFormProps) {
     }
   };
 
-  // Estado para guardar os botões de seleção de perfil
-  const [roleSelectionUI, setRoleSelectionUI] =
-    useState<React.ReactNode | null>(null);
-
   return (
     <Card className="w-full bg-transparent border-0 shadow-none">
       <CardContent className="p-0">
-        {!roleSelectionUI ? (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu.email@exemplo.com"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="pl-10 h-11 focus-visible:ring-blue-600 focus-visible:ring-2"
-                  required
-                  disabled={isLoading}
-                  autoComplete="username"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Digite sua senha"
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm({ ...form, password: e.target.value })
-                  }
-                  className="pl-10 pr-12 h-11 focus-visible:ring-blue-600 focus-visible:ring-2"
-                  required
-                  disabled={isLoading}
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                  disabled={isLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-            <Button
-              type="submit"
-              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                "Entrar"
-              )}
-            </Button>
-          </form>
-        ) : (
-          <div className="space-y-4 animate-in fade-in-50">
-            <h3 className="text-lg font-medium text-center text-foreground">
-              Você tem múltiplos perfis
-            </h3>
-            <p className="text-sm text-muted-foreground text-center">
-              Selecione com qual perfil deseja entrar:
-            </p>
-            <div className="flex flex-col space-y-3 pt-2">
-              {userRoles.map((role) => (
-                <Button
-                  key={role}
-                  variant="outline"
-                  className="h-11 text-base"
-                  onClick={() => handleRoleSelection(role, authenticatedUser)}
-                >
-                  Entrar como: {role.charAt(0).toUpperCase() + role.slice(1)}
-                </Button>
-              ))}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="email">E-mail</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu.email@exemplo.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                className="pl-10 h-11 focus-visible:ring-blue-600 focus-visible:ring-2"
+                required
+                disabled={isLoading}
+                autoComplete="username"
+              />
             </div>
           </div>
-        )}
+
+          <div className="space-y-2">
+            <Label htmlFor="password">Senha</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Digite sua senha"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                className="pl-10 pr-12 h-11 focus-visible:ring-blue-600 focus-visible:ring-2"
+                required
+                disabled={isLoading}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                disabled={isLoading}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              "Entrar"
+            )}
+          </Button>
+        </form>
         {children}
       </CardContent>
     </Card>
