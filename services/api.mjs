@@ -1,14 +1,6 @@
-// SUBSTITUA TODO O CONTEÚDO DE services/api.mjs POR ESTE CÓDIGO
-
-// Caminho: services/api.mjs
-
 const BASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const API_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-/**
- * Função de login que o seu formulário usa.
- * Ela continua exatamente como era.
- */
 export async function login(email, senha) {
     console.log("🔐 Iniciando login...");
     const res = await fetch(`${BASE_URL}/auth/v1/token?grant_type=password`, {

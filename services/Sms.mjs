@@ -1,11 +1,4 @@
-/**
- * Serviço de SMS via Supabase Edge Function (sem backend)
- * Usa o token JWT salvo no localStorage (chave: "token")
- */
-
-const SUPABASE_FUNCTION_URL =
-  "https://yuanqfswhberkoevtmfr.supabase.co/functions/v1/send-sms";
-
+const BASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 export const smsService = {
   /**
    * Envia um SMS de lembrete via Twilio
@@ -32,7 +25,7 @@ export const smsService = {
 
       console.log("[smsService] Enviando SMS para:", phone_number);
 
-      const response = await fetch(SUPABASE_FUNCTION_URL, {
+      const response = await fetch(BASE_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

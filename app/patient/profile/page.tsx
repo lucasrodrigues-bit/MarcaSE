@@ -105,20 +105,20 @@ export default function PatientProfile() {
         const userRole = userSystemData?.roles?.[0] ?? "paciente";
 
         setReadOnly({
-          name: patientDetails.full_name || user.name || "—",
-          cpf: patientDetails.cpf || "Não informado",
-          birthDate: patientDetails.birth_date || "",
-          cep: patientDetails.cep || "Não informado",
+          name: patientDetails?.full_name || user.name || "—",
+          cpf: patientDetails?.cpf || "Não informado",
+          birthDate: patientDetails?.birth_date || "",
+          cep: patientDetails?.cep || "Não informado",
           avatarFullUrl: freshAvatarUrl,
           memberSince: userSystemData?.profile?.created_at,
           role: userRole,
         });
 
         setEditableFields({
-          phone: patientDetails.phone_mobile || "",
-          street: patientDetails.street || "",
-          number: patientDetails.number || "",
-          city: patientDetails.city || "",
+          phone: patientDetails?.phone_mobile || "",
+          street: patientDetails?.street || "",
+          number: patientDetails?.number || "",
+          city: patientDetails?.city || "",
           email: userSystemData?.profile?.email || user.email || "",
         });
       } catch (error) {
