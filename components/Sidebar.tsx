@@ -326,7 +326,7 @@ export default function Sidebar({ children }: SidebarProps) {
     const managerItems: MenuItem[] = [
       {
         href: "/manager/dashboard",
-        icon: LayoutDashboard,  
+        icon: LayoutDashboard,
         label: "Dashboard",
         description: "Visão geral",
       },
@@ -365,13 +365,18 @@ export default function Sidebar({ children }: SidebarProps) {
         icon: CalendarRange,
         label: "Agendar Consulta",
         description: "Agenda",
-
       },
-       {
+      {
         href: "/patient/reports",
-        icon: LayoutDashboard,  
+        icon: LayoutDashboard,
         label: "Meus Laudos",
-        description: "Visão geral",
+        description: "Laudos",
+      },
+      {
+        href: "/patient/profile",
+        icon: LayoutDashboard,
+        label: "Meus Dados",
+        description: "Dados do usuário",
       },
     ];
 
