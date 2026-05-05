@@ -358,6 +358,18 @@ export default function Sidebar({ children }: SidebarProps) {
         label: "Disponibilidade",
         description: "Agenda",
       },
+      {
+        href: "/patient/reports",
+        icon: CalendarRange,
+        label: "Meus Laudos",
+        description: "Laudos",
+      },
+      {
+        href: "/patient/profile",
+        icon: CalendarRange,
+        label: "Meus Dados",
+        description: "Dados do usuario",
+      },
     ];
 
     switch (role) {
@@ -621,7 +633,6 @@ export default function Sidebar({ children }: SidebarProps) {
               </Tooltip>
             </div>
           )}
-
         </aside>
 
         {/* ─── MAIN CONTENT ────────────────────────────────────────── */}
