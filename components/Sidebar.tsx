@@ -24,7 +24,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 import {
@@ -41,11 +40,10 @@ import {
   FileText,
   Stethoscope,
   HeartPulse,
-  ClipboardList,
   Activity,
 } from "lucide-react";
 
-import SidebarUserSection from "@/components/ui/userToolTip";
+import UserTopbarMenu from "@/components/ui/userToolTip";
 
 interface UserData {
   id: string;
@@ -360,24 +358,6 @@ export default function Sidebar({ children }: SidebarProps) {
         label: "Disponibilidade",
         description: "Agenda",
       },
-      {
-        href: "/patient/schedule",
-        icon: CalendarRange,
-        label: "Agendar Consulta",
-        description: "Agenda",
-      },
-      {
-        href: "/patient/reports",
-        icon: LayoutDashboard,
-        label: "Meus Laudos",
-        description: "Laudos",
-      },
-      {
-        href: "/patient/profile",
-        icon: LayoutDashboard,
-        label: "Meus Dados",
-        description: "Dados do usuário",
-      },
     ];
 
     switch (role) {
@@ -642,26 +622,6 @@ export default function Sidebar({ children }: SidebarProps) {
             </div>
           )}
 
-          {/* ── DIVIDER ────────────────────────────────────────── */}
-          <div
-            className={`mx-3 ${isDefaultMode ? "border-t border-white/10" : "border-t border-sidebar-border"}`}
-          />
-
-          {/* ── USER SECTION ───────────────────────────────────── */}
-          <div
-            className={`
-              p-2 flex flex-col
-              ${sidebarCollapsed ? "items-center" : "items-stretch"}
-            `}
-          >
-            <SidebarUserSection
-              userData={userData}
-              sidebarCollapsed={sidebarCollapsed}
-              handleLogout={handleLogout}
-              isActive={role !== "paciente"}
-              avatarUrl={avatarFullUrl}
-            />
-          </div>
         </aside>
 
         {/* ─── MAIN CONTENT ────────────────────────────────────────── */}
@@ -672,6 +632,16 @@ export default function Sidebar({ children }: SidebarProps) {
             ${sidebarCollapsed ? "ml-[68px]" : "ml-64"}
           `}
         >
+          {/* ── TOPBAR ──────────────────────────────────────────── */}
+          <header className="h-16 border-b flex items-center justify-end px-6 bg-background shrink-0">
+            <UserTopbarMenu
+              userData={userData}
+              avatarUrl={avatarFullUrl}
+              handleLogout={handleLogout}
+              role={role}
+            />
+          </header>
+
           <main className="flex-1 p-4 md:p-6">{children}</main>
 
           {/* ── LOGOUT DIALOG ──────────────────────────────────── */}
