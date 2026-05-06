@@ -292,6 +292,12 @@ export default function Sidebar({ children }: SidebarProps) {
         label: "Disponibilidade",
         description: "Agenda",
       },
+       {
+        href: "/patient/profile",
+        icon: UserCircle,
+        label: "Meus Dados",
+        description: "Perfil",
+      },
     ];
 
     const secretaryItems: MenuItem[] = [
@@ -318,6 +324,12 @@ export default function Sidebar({ children }: SidebarProps) {
         icon: Users,
         label: "Gestão de Pacientes",
         description: "Pacientes",
+      },
+      {
+        href: "/patient/profile",
+        icon: UserCircle,
+        label: "Meus Dados",
+        description: "Perfil",
       },
     ];
 

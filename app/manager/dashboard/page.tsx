@@ -519,24 +519,15 @@ export default function ManagerDashboard() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Link href="/manager/home/novo">
-              <Button
-                size="sm"
-                className="gap-1 bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Plus className="h-4 w-4" /> Novo Médico
-              </Button>
-            </Link>
-            <Link href="/manager/usuario/novo">
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1 border-border text-foreground/70 hover:bg-secondary"
-              >
-                <UserPlus className="h-4 w-4" /> Novo Usuário
-              </Button>
-            </Link>
-          </div>
+  <Link href="/manager/usuario/novo">
+    <Button
+      size="sm"
+      className="gap-1 bg-blue-600 hover:bg-blue-700 text-white"
+    >
+      <UserPlus className="h-4 w-4" /> Novo Usuário
+    </Button>
+  </Link>
+</div>
         </div>
 
         {/* ── KPI Cards ── */}
