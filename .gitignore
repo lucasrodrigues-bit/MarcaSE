@@ -20,3 +20,7 @@ documentos_projeto/documentosUteis.md
 
 # env files
 .env.local
+
+#agents
+.agents
+.claude
