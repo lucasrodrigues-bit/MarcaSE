@@ -292,7 +292,7 @@ export default function Sidebar({ children }: SidebarProps) {
         label: "Disponibilidade",
         description: "Agenda",
       },
-       {
+      {
         href: "/patient/profile",
         icon: UserCircle,
         label: "Meus Dados",
@@ -324,6 +324,12 @@ export default function Sidebar({ children }: SidebarProps) {
         icon: Users,
         label: "Gestão de Pacientes",
         description: "Pacientes",
+      },
+      {
+        href: "/manager/home",
+        icon: Stethoscope,
+        label: "Gestão de Médicos",
+        description: "Médicos",
       },
       {
         href: "/patient/profile",
@@ -371,10 +377,10 @@ export default function Sidebar({ children }: SidebarProps) {
         description: "Agenda",
       },
       {
-        href: "/patient/reports",
-        icon: CalendarRange,
-        label: "Meus Laudos",
-        description: "Laudos",
+        href: "/manager/laudos",
+        icon: FileText,
+        label: "Laudos",
+        description: "Todos os laudos",
       },
       {
         href: "/patient/profile",

@@ -3,6 +3,19 @@ import { api } from "./api.mjs";
 const REPORTS_API_URL = "/rest/v1/reports";
 
 export const reportsApi = {
+  getAllReports: async (filters = {}) => {
+    const params = ["order=created_at.desc"];
+    if (filters.patient_id) params.push(`patient_id=eq.${filters.patient_id}`);
+    if (filters.status) params.push(`status=eq.${filters.status}`);
+    if (filters.created_by) params.push(`created_by=eq.${filters.created_by}`);
+    try {
+      return await api.get(`${REPORTS_API_URL}?${params.join("&")}`);
+    } catch (error) {
+      console.error("Failed to fetch all reports:", error);
+      throw error;
+    }
+  },
+
   getReports: async (patientId) => {
     try {
       const data = await api.get(`${REPORTS_API_URL}?patient_id=eq.${patientId}`);
