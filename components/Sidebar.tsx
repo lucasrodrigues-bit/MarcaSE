@@ -378,7 +378,7 @@ export default function Sidebar({ children }: SidebarProps) {
       },
       {
         href: "/patient/profile",
-        icon: CalendarRange,
+        icon: UserCircle,
         label: "Meus Dados",
         description: "Dados do usuario",
       },
@@ -387,12 +387,16 @@ export default function Sidebar({ children }: SidebarProps) {
     switch (role) {
       case "gestor":
       case "admin":
+      case "manager":
         return managerItems;
       case "medico":
+      case "doctor":
         return doctorItems;
       case "secretaria":
+      case "secretary":
         return secretaryItems;
       case "paciente":
+      case "patient":
       default:
         return patientItems;
     }
