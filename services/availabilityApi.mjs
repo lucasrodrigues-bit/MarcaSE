@@ -1,19 +1,11 @@
 import { api } from "./api.mjs";
 
+const PREFER_RETURN = { Prefer: "return=representation" };
+
 export const AvailabilityService = {
     list: () => api.get("/rest/v1/doctor_availability"),
-    listById: (id) => api.get(`/rest/v1/doctor_availability?doctor_id=eq.${id}`),
-    create: (data) => api.post("/rest/v1/doctor_availability", data),
-    update: (id, data) => api.patch(`/rest/v1/doctor_availability?id=eq.${id}`, data),
+    listById: (doctorId) => api.get(`/rest/v1/doctor_availability?doctor_id=eq.${doctorId}`),
+    create: (data) => api.post("/rest/v1/doctor_availability", data, { headers: PREFER_RETURN }),
+    update: (id, data) => api.patch(`/rest/v1/doctor_availability?id=eq.${id}`, data, { headers: PREFER_RETURN }),
     delete: (id) => api.delete(`/rest/v1/doctor_availability?id=eq.${id}`),
-    
 };
-export async function getDisponibilidadeByMedico(idMedico) {
-  try {
-    const response = await api.get(`/disponibilidade/${idMedico}`);
-    return response.data;
-  } catch (error) {
-    console.error("Erro ao buscar disponibilidade do médico:", error);
-    return [];
-  }
-}

@@ -15,8 +15,7 @@ import {
 } from "@/components/ui/select";
 
 import { AvailabilityService } from "@/services/availabilityApi.mjs";
-import { usersService } from "@/services/usersApi.mjs";
-import { doctorsService } from "@/services/doctorsApi.mjs";
+import { api } from "@/services/api.mjs";
 
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -47,66 +46,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import Sidebar from "@/components/Sidebar";
 
-// ... (Interfaces de tipo omitidas para brevidade, pois não foram alteradas)
-
-interface UserPermissions {
-  isAdmin: boolean;
-  isManager: boolean;
-  isDoctor: boolean;
-  isSecretary: boolean;
-  isAdminOrManager: boolean;
-}
-
-interface UserData {
-  user: {
-    id: string;
-    email: string;
-    email_confirmed_at: string | null;
-    created_at: string | null;
-    last_sign_in_at: string | null;
-  };
-  profile: {
-    id: string;
-    full_name: string;
-    email: string;
-    phone: string;
-    avatar_url: string | null;
-    disabled: boolean;
-    created_at: string | null;
-    updated_at: string | null;
-  };
-  roles: string[];
-  permissions: UserPermissions;
-}
-
-type Doctor = {
-  id: string;
-  user_id: string | null;
-  crm: string;
-  crm_uf: string;
-  specialty: string;
-  full_name: string;
-  cpf: string;
-  email: string;
-  phone_mobile: string | null;
-  phone2: string | null;
-  cep: string | null;
-  street: string | null;
-  number: string | null;
-  complement: string | null;
-  neighborhood: string | null;
-  city: string | null;
-  state: string | null;
-  birth_date: string | null;
-  rg: string | null;
-  active: boolean;
-  created_at: string;
-  updated_at: string;
-  created_by: string;
-  updated_by: string | null;
-  max_days_in_advance: number;
-  rating: number | null;
-};
 
 type Availability = {
   id: string;
@@ -124,7 +63,6 @@ type Availability = {
 };
 
 export default function AvailabilityPage() {
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [schedule, setSchedule] = useState<
@@ -132,11 +70,11 @@ export default function AvailabilityPage() {
   >({});
   const formatTime = (time?: string | null) =>
     time?.split(":")?.slice(0, 2).join(":") ?? "";
-  const [userData, setUserData] = useState<UserData>();
+  const [authUserId, setAuthUserId] = useState<string | undefined>();
   const [availability, setAvailability] = useState<any | null>(null);
-  const [doctorId, setDoctorId] = useState<string>();
+  const [doctorId, setDoctorId] = useState<string | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [modalidadeConsulta, setModalidadeConsulta] = useState<string>("");
+  const [modalidadeConsulta, setModalidadeConsulta] = useState<string>("presencial");
   const [selectedAvailability, setSelectedAvailability] =
     useState<Availability | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -230,33 +168,31 @@ export default function AvailabilityPage() {
     };
     const fetchData = async () => {
         try {
-            const loggedUser = await usersService.getMe();
-            const doctorList = await doctorsService.list();
-            setUserData(loggedUser);
-            const doctor = findDoctorById(loggedUser.user.id, doctorList);
-            setDoctorId(doctor?.id);
-            console.log(doctor);
-            // Busca disponibilidade
-            const availabilityList = await AvailabilityService.list();
-        
-            // Filtra já com a variável local
-            const filteredAvail = availabilityList.filter(
-            (disp: { doctor_id: string }) => disp.doctor_id === doctor?.id
-            );
-            setAvailability(filteredAvail);
+            const userInfoStr = typeof window !== "undefined" ? localStorage.getItem("user_info") : null;
+            if (!userInfoStr) throw new Error("Sessão não encontrada.");
+            const uid = JSON.parse(userInfoStr).id;
+            setAuthUserId(uid);
+
+            const doctorRes = await api.get(`/rest/v1/doctors?user_id=eq.${uid}&select=id`);
+            const did: string | undefined = Array.isArray(doctorRes) ? doctorRes[0]?.id : undefined;
+            setDoctorId(did);
+
+            if (!did) {
+                toast({ title: "Atenção", description: "Registro de médico não encontrado." });
+                setAvailability([]);
+                return;
+            }
+
+            const availabilityList = await AvailabilityService.listById(did);
+            setAvailability(Array.isArray(availabilityList) ? availabilityList : []);
         } catch (e: any) {
-            alert(`${e?.error} ${e?.message}`);
+            toast({ title: "Erro", description: e?.message || "Erro ao carregar dados." });
         }
     };
 
   useEffect(() => {
     fetchData();
   }, []);
-
-  // Função auxiliar para filtrar o id do doctor correspondente ao user logado
-  function findDoctorById(id: string, doctors: Doctor[]) {
-    return doctors.find((doctor) => doctor.user_id === id);
-  }
 
   function formatAvailability(data: Availability[]) {
     // Agrupar os horários por dia da semana
@@ -290,20 +226,50 @@ export default function AvailabilityPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isLoading) return;
+
+    const formData = new FormData(e.currentTarget);
+    const weekdayVal = formData.get("weekday") as string | null;
+    const startTime = formData.get("horarioEntrada") as string | null;
+    const endTime = formData.get("horarioSaida") as string | null;
+    const slotMinutes = Number(formData.get("duracaoConsulta"));
+
+    if (!weekdayVal) {
+      toast({ title: "Atenção", description: "Selecione um dia da semana." });
+      return;
+    }
+    if (!startTime || !endTime) {
+      toast({ title: "Atenção", description: "Informe os horários de entrada e saída." });
+      return;
+    }
+    if (startTime >= endTime) {
+      toast({ title: "Atenção", description: "O horário de entrada deve ser anterior ao de saída." });
+      return;
+    }
+    if (!slotMinutes || slotMinutes < 15 || slotMinutes > 120) {
+      toast({ title: "Atenção", description: "A duração da consulta deve ser entre 15 e 120 minutos." });
+      return;
+    }
+    if (!doctorId) {
+      toast({ title: "Erro", description: "Registro de médico não encontrado. Recarregue a página." });
+      return;
+    }
+    if (!authUserId) {
+      toast({ title: "Erro", description: "Sessão não encontrada. Faça login novamente." });
+      return;
+    }
+
     setIsLoading(true);
-    const form = e.currentTarget;
-    const formData = new FormData(form);
 
     const apiPayload = {
       doctor_id: doctorId,
-      weekday: (formData.get("weekday") as string) || undefined,
-      start_time: (formData.get("horarioEntrada") as string) || undefined,
-      end_time: (formData.get("horarioSaida") as string) || undefined,
-      slot_minutes: Number(formData.get("duracaoConsulta")) || undefined,
-      appointment_type: modalidadeConsulta || undefined,
+      weekday: weekdayVal,
+      start_time: startTime,
+      end_time: endTime,
+      slot_minutes: slotMinutes,
+      appointment_type: modalidadeConsulta,
       active: true,
+      created_by: authUserId,
     };
-    console.log(apiPayload);
 
     try {
       const res = await AvailabilityService.create(apiPayload);
