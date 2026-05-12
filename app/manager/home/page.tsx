@@ -11,10 +11,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 import { doctorsService } from "@/services/doctorsApi.mjs";
 import Sidebar from "@/components/Sidebar";
-
-// --- NOVOS IMPORTS (Certifique-se que criou os arquivos no passo anterior) ---
 import { FilterBar } from "@/components/ui/filter-bar";
 import { normalizeSpecialty, getUniqueSpecialties } from "@/lib/normalization";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface Doctor {
   id: number;
@@ -25,6 +24,7 @@ interface Doctor {
   city: string | null;
   state: string | null;
   status?: string;
+  avatar_url?: string | null;
 }
 
 interface DoctorDetails {
@@ -220,7 +220,7 @@ export default function DoctorsPage() {
 
   return (
     <Sidebar>
-      <div className="space-y-6 px-2 sm:px-4 md:px-6">
+      <div className="space-y-6 px-2 sm:px-4 md:px-6 pb-20">
         {/* Cabeçalho */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
@@ -302,7 +302,10 @@ export default function DoctorsPage() {
                                     {currentItems.map((doctor) => (
                                         <tr key={doctor.id} className="hover:bg-muted transition">
                                             <td className="px-4 py-3 font-medium">
-                                                {doctor.full_name}
+                                                <div className="flex items-center gap-3">
+                                                    <UserAvatar name={doctor.full_name} avatarUrl={doctor.avatar_url} />
+                                                    {doctor.full_name}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{doctor.crm}</td>
                                             <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
@@ -380,24 +383,27 @@ export default function DoctorsPage() {
                         <div className="space-y-4">
                             {currentItems.map((doctor) => (
                                 <div key={doctor.id} className="bg-muted rounded-lg p-4 flex justify-between items-center border">
-                                    <div>
-                                        <div className="font-semibold">{doctor.full_name}</div>
-                                        <div className="text-xs text-muted-foreground mb-1">{doctor.phone_mobile}</div>
-                                        <div className="text-sm text-muted-foreground">{normalizeSpecialty(doctor.specialty)}</div>
-                                        <div className="text-xs mt-1">
-                                            <span className={`px-2 py-0.5 rounded-full text-xs ${
-                                                    doctor.status === 'Ativo' ? 'bg-primary/10 text-primary' : 
-                                                    doctor.status === 'Inativo' ? 'bg-destructive/10 text-destructive' : 'bg-yellow-400/10 text-yellow-400'
-                                                }`}>
-                                                    {doctor.status || "N/A"}
-                                            </span>
+                                    <div className="flex items-center gap-3">
+                                        <UserAvatar name={doctor.full_name} avatarUrl={doctor.avatar_url} />
+                                        <div>
+                                            <div className="font-semibold">{doctor.full_name}</div>
+                                            <div className="text-xs text-muted-foreground mb-1">{doctor.phone_mobile}</div>
+                                            <div className="text-sm text-muted-foreground">{normalizeSpecialty(doctor.specialty)}</div>
+                                            <div className="text-xs mt-1">
+                                                <span className={`px-2 py-0.5 rounded-full text-xs ${
+                                                        doctor.status === 'Ativo' ? 'bg-primary/10 text-primary' :
+                                                        doctor.status === 'Inativo' ? 'bg-destructive/10 text-destructive' : 'bg-yellow-400/10 text-yellow-400'
+                                                    }`}>
+                                                        {doctor.status || "N/A"}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                            <Button variant="ghost" className="h-8 w-8 p-0">
                                                 <span className="sr-only">Abrir menu</span>
-                                                <div className="font-bold text-muted-foreground">...</div>
+                                                <MoreVertical className="h-4 w-4" />
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">

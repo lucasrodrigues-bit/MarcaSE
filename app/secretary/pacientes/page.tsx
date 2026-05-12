@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { patientsService } from "@/services/patientsApi.mjs";
 import Sidebar from "@/components/Sidebar";
 import { FilterBar } from "@/components/ui/filter-bar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 export default function PacientesPage() {
     const [searchTerm, setSearchTerm] = useState("");
@@ -49,6 +50,7 @@ export default function PacientesPage() {
                 proximoAtendimento: p.next_appointment_at?.split('T')[0] ?? "—",
                 vip: Boolean(p.vip ?? false),
                 convenio: p.convenio ?? "Particular",
+                avatar_url: p.avatar_url ?? null,
             }));
             setAllPatients(mapped);
         } catch (e: any) {
@@ -201,9 +203,7 @@ export default function PacientesPage() {
                                         <tr key={patient.id} className="hover:bg-muted transition">
                                             <td className="px-4 py-3 font-medium">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                                        <span className="text-primary font-medium text-sm">{patient.nome?.charAt(0) || "?"}</span>
-                                                    </div>
+                                                    <UserAvatar name={patient.nome} avatarUrl={patient.avatar_url} />
                                                     <span>
                                                         {patient.nome}
                                                         {patient.vip && <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full text-purple-400 bg-purple-400/15">VIP</span>}
@@ -243,14 +243,17 @@ export default function PacientesPage() {
                         <div className="space-y-4">
                             {currentPatients.map((patient) => (
                                 <div key={patient.id} className="bg-muted rounded-lg p-4 flex justify-between items-center border">
-                                    <div>
-                                        <div className="font-semibold flex items-center gap-2">
-                                            {patient.nome}
-                                            {patient.vip && <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full text-purple-400 bg-purple-400/15 uppercase">VIP</span>}
+                                    <div className="flex items-center gap-3">
+                                        <UserAvatar name={patient.nome} avatarUrl={patient.avatar_url} />
+                                        <div>
+                                            <div className="font-semibold flex items-center gap-2">
+                                                {patient.nome}
+                                                {patient.vip && <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full text-purple-400 bg-purple-400/15 uppercase">VIP</span>}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground mb-1">{patient.telefone}</div>
+                                            <div className="text-sm text-muted-foreground">{patient.convenio}</div>
+                                            <div className="text-xs text-muted-foreground">{patient.cidade} / {patient.estado}</div>
                                         </div>
-                                        <div className="text-xs text-muted-foreground mb-1">{patient.telefone}</div>
-                                        <div className="text-sm text-muted-foreground">{patient.convenio}</div>
-                                        <div className="text-xs text-muted-foreground">{patient.cidade} / {patient.estado}</div>
                                     </div>
                                     <ActionMenu patientId={String(patient.id)} />
                                 </div>

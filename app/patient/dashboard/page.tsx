@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, User, Plus } from "lucide-react";
+import { Calendar, Clock, CalendarPlus, Pencil } from "lucide-react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 
@@ -15,7 +15,7 @@ export default function PatientDashboard() {
     <Sidebar>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">
             Bem-vindo ao seu portal de consultas médicas
           </p>
@@ -73,7 +73,7 @@ export default function PatientDashboard() {
             <CardContent className="space-y-4">
               <Link href="/patient/schedule">
                 <Button className="w-full justify-start">
-                  <User className="mr-2 h-4 w-4" />
+                  <CalendarPlus className="mr-2 h-4 w-4" />
                   Agendar Nova Consulta
                 </Button>
               </Link>
@@ -91,7 +91,7 @@ export default function PatientDashboard() {
                   variant="outline"
                   className="w-full justify-start"
                 >
-                  <User className="mr-2 h-4 w-4" />
+                  <Pencil className="mr-2 h-4 w-4" />
                   Atualizar Dados
                 </Button>
               </Link>

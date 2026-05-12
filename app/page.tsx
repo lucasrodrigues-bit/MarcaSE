@@ -14,8 +14,6 @@ import {
   ArrowRight,
 } from "lucide-react"
 
-// ─── Dados das features principais ────────────────────────────────────────────
-
 const FEATURES = [
   {
     icon: Stethoscope,
@@ -37,8 +35,6 @@ const FEATURES = [
   },
 ]
 
-// ─── Dados dos diferenciais (linha inferior) ──────────────────────────────────
-
 const HIGHLIGHTS = [
   {
     icon: ShieldCheck,
@@ -56,8 +52,6 @@ const HIGHLIGHTS = [
     description: "Métricas e indicadores para decisões estratégicas.",
   },
 ]
-
-// ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function HomePage() {
   return (
@@ -79,9 +73,14 @@ export default function HomePage() {
             height={36}
             className="object-contain"
           />
-          <span className="font-bold text-xl tracking-tight text-foreground">
-            MarcaSE
-          </span>
+          <div className="flex flex-col leading-none">
+            <span className="font-bold text-lg tracking-tight text-foreground">
+              MarcaSE
+            </span>
+            <span className="text-[9px] text-muted-foreground/60 tracking-widest uppercase">
+              Saúde Digital
+            </span>
+          </div>
         </div>
 
         <Link href="/login">
@@ -95,24 +94,26 @@ export default function HomePage() {
       {/* ── Hero ── */}
       <section className="flex-1 flex items-center justify-center px-6 md:px-12 py-20 relative overflow-hidden">
 
-        {/* Gradiente de fundo sutil */}
+        {/* Gradiente de fundo em duas camadas */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background:
-              "radial-gradient(ellipse 70% 50% at 50% 0%, color-mix(in oklch, var(--primary) 12%, transparent), transparent)",
+            background: `
+              radial-gradient(ellipse 60% 50% at 20% 0%, oklch(0.52 0.18 195 / 0.14), transparent),
+              radial-gradient(ellipse 50% 40% at 80% 100%, oklch(0.55 0.2 265 / 0.08), transparent)
+            `,
           }}
         />
 
         <div className="max-w-3xl w-full text-center relative z-10">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border bg-card text-sm text-muted-foreground mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border bg-card text-sm text-muted-foreground mb-6 shadow-sm">
             <ShieldCheck className="w-3.5 h-3.5 text-primary" />
             Sistema de gestão clínica — Sergipe
           </div>
 
           {/* Título */}
-          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight text-foreground">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight text-foreground">
             Gestão inteligente
             <br />
             <span className="text-primary">para clínicas modernas</span>
@@ -129,7 +130,7 @@ export default function HomePage() {
             <Link href="/login">
               <Button
                 size="lg"
-                className="shadow-md hover:shadow-lg hover:scale-[1.02] transition-all gap-2 px-8"
+                className="shadow-md hover:shadow-lg hover:scale-[1.02] transition-all gap-2 px-8 rounded-full"
               >
                 Acessar sistema
                 <ArrowRight className="w-4 h-4" />
@@ -138,20 +139,21 @@ export default function HomePage() {
             <Button
               variant="outline"
               size="lg"
-              className="hover:bg-muted transition-all px-8"
+              className="hover:bg-muted transition-all px-8 rounded-full"
+              onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
             >
               Ver funcionalidades
             </Button>
           </div>
 
-          {/* Stats rápidas */}
-          <div className="mt-16 grid grid-cols-3 gap-6 max-w-md mx-auto">
+          {/* Stats rápidas — agrupadas em card */}
+          <div className="mt-16 grid grid-cols-3 divide-x divide-border max-w-md mx-auto bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
             {[
               { value: "100%", label: "Web-based" },
               { value: "24/7", label: "Disponível" },
               { value: "LGPD", label: "Compliant" },
             ].map((stat) => (
-              <div key={stat.label} className="text-center">
+              <div key={stat.label} className="text-center py-4 px-2">
                 <p className="text-2xl font-bold text-primary">{stat.value}</p>
                 <p className="text-xs text-muted-foreground mt-0.5 uppercase tracking-wider">
                   {stat.label}
@@ -163,7 +165,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Features principais ── */}
-      <section className="px-6 md:px-12 pb-16">
+      <section id="features" className="px-6 md:px-12 pb-16">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-center text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-8">
             Tudo que sua clínica precisa
@@ -173,11 +175,11 @@ export default function HomePage() {
             {FEATURES.map((f) => (
               <Card
                 key={f.title}
-                className="rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all group"
+                className="rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-lg transition-all group"
               >
                 <CardContent className="p-6">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                    <f.icon className="w-5 h-5 text-primary" />
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-5 group-hover:from-primary/30 transition-all">
+                    <f.icon className="w-6 h-6 text-primary" />
                   </div>
                   <h3 className="font-semibold text-base text-foreground mb-1.5">
                     {f.title}
@@ -193,12 +195,17 @@ export default function HomePage() {
       </section>
 
       {/* ── Diferenciais ── */}
-      <section className="border-t border-border bg-muted/30 px-6 md:px-12 py-12">
+      <section
+        className="border-y border-border px-6 md:px-12 py-14"
+        style={{
+          background: "linear-gradient(135deg, oklch(0.94 0.02 240 / 0.6), oklch(0.93 0.04 265 / 0.3))",
+        }}
+      >
         <div className="max-w-5xl mx-auto grid gap-8 md:grid-cols-3">
           {HIGHLIGHTS.map((h) => (
             <div key={h.label} className="flex items-start gap-4">
-              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                <h.icon className="w-4 h-4 text-primary" />
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 ring-1 ring-primary/10">
+                <h.icon className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <p className="font-semibold text-sm text-foreground">{h.label}</p>
@@ -212,8 +219,13 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA final ── */}
-      <section className="px-6 md:px-12 py-16 text-center">
-        <div className="max-w-xl mx-auto">
+      <section className="px-6 md:px-12 py-16">
+        <div
+          className="max-w-2xl mx-auto rounded-3xl p-10 text-center border border-primary/15 shadow-sm"
+          style={{
+            background: "linear-gradient(135deg, oklch(0.52 0.18 195 / 0.06), oklch(0.55 0.2 265 / 0.05))",
+          }}
+        >
           <h2 className="text-2xl font-bold text-foreground mb-3">
             Pronto para começar?
           </h2>
@@ -223,7 +235,7 @@ export default function HomePage() {
           <Link href="/login">
             <Button
               size="lg"
-              className="shadow-md hover:shadow-lg hover:scale-[1.02] transition-all gap-2 px-10"
+              className="shadow-md hover:shadow-lg hover:scale-[1.02] transition-all gap-2 px-10 rounded-full"
             >
               Entrar no sistema
               <ArrowRight className="w-4 h-4" />

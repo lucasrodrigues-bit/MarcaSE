@@ -5,7 +5,6 @@
 import { usersService } from "@/services/usersApi.mjs";
 import { LoginForm } from "@/components/LoginForm";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, X, Shield } from "lucide-react";
@@ -78,17 +77,17 @@ export default function LoginPage() {
 
   return (
     <>
-      {/* ── Fundo com gradiente sutil ── */}
+      {/* ── Fundo com gradiente em duas camadas ── */}
       <div className="min-h-screen flex flex-col items-center justify-center bg-background relative overflow-hidden px-4">
 
-        {/* Blob decorativo — usa a cor primária com opacity baixa */}
         <div
-          className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full opacity-[0.06] blur-3xl pointer-events-none"
-          style={{ background: "var(--primary)" }}
-        />
-        <div
-          className="absolute -bottom-32 -right-32 w-[400px] h-[400px] rounded-full opacity-[0.05] blur-3xl pointer-events-none"
-          style={{ background: "var(--primary)" }}
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `
+              radial-gradient(ellipse 80% 60% at -10% 10%, oklch(0.52 0.18 195 / 0.1), transparent),
+              radial-gradient(ellipse 60% 50% at 110% 90%, oklch(0.55 0.2 265 / 0.08), transparent)
+            `,
+          }}
         />
 
         {/* ── Link de volta ── */}
@@ -103,7 +102,7 @@ export default function LoginPage() {
         </div>
 
         {/* ── Card de login ── */}
-        <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-xl p-10">
+        <div className="w-full max-w-md bg-card border border-border/60 rounded-3xl shadow-2xl p-10 ring-1 ring-primary/5 relative z-10">
 
           {/* Logo + nome */}
           <div className="flex items-center justify-center gap-3 mb-8">
@@ -145,7 +144,7 @@ export default function LoginPage() {
               Não tem uma conta de paciente?{" "}
             </span>
             <Link href="/patient/register">
-              <span className="font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer transition-colors">
+              <span className="font-semibold text-primary hover:text-primary/80 hover:underline cursor-pointer transition-colors">
                 Crie uma agora
               </span>
             </Link>
@@ -153,16 +152,22 @@ export default function LoginPage() {
         </div>
 
         {/* Rodapé de segurança */}
-        <div className="mt-6 flex items-center gap-1.5 text-xs text-muted-foreground/60">
-          <Shield className="w-3.5 h-3.5" />
-          <span>Conexão segura e dados protegidos</span>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground/60 relative z-10">
+          <div className="flex items-center gap-1.5">
+            <Shield className="w-3.5 h-3.5 text-primary/50" />
+            <span>Conexão segura</span>
+          </div>
+          <span className="text-border hidden sm:inline">|</span>
+          <span>Dados protegidos — LGPD</span>
+          <span className="text-border hidden sm:inline">|</span>
+          <span>MarcaSE 2025</span>
         </div>
       </div>
 
       {/* ── Modal de Recuperação de Senha ── */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-          <div className="relative w-full max-w-md bg-card border border-border p-8 rounded-2xl shadow-2xl">
+          <div className="relative w-full max-w-md bg-card border border-border p-8 rounded-3xl shadow-2xl">
             <button
               onClick={closeModal}
               className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
@@ -201,7 +206,7 @@ export default function LoginPage() {
 
               {message && (
                 <div
-                  className={`p-3 rounded-lg text-sm ${
+                  className={`p-3 rounded-xl text-sm ${
                     message.type === "success"
                       ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
                       : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
@@ -223,7 +228,7 @@ export default function LoginPage() {
                 <Button
                   onClick={handleResetPassword}
                   disabled={isLoading}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  className="flex-1"
                 >
                   {isLoading ? "Enviando..." : "Resetar Senha"}
                 </Button>

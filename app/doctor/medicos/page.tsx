@@ -8,19 +8,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Eye, Edit, Calendar, Trash2, Loader2, MoreVertical, Filter } from "lucide-react";
-import { api } from "@/services/api.mjs";
-import { PatientDetailsModal } from "@/components/ui/patient-details-modal";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input"; 
+import { Eye, Edit, Loader2, MoreVertical } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { patientsService } from "@/services/patientsApi.mjs";
+import { PatientDetailsModal } from "@/components/ui/patient-details-modal";
 import Sidebar from "@/components/Sidebar";
+import { FilterBar } from "@/components/ui/filter-bar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface Paciente {
   id: string;
@@ -29,7 +24,6 @@ interface Paciente {
   cidade: string;
   estado: string;
   ultimoAtendimento?: string;
-  proximoAtendimento?: string;
   email?: string;
   birth_date?: string;
   cpf?: string;
@@ -41,148 +35,55 @@ interface Paciente {
   complement?: string;
   neighborhood?: string;
   cep?: string;
-  // NOVOS CAMPOS PARA O FILTRO
-  convenio?: string; 
-  vip?: string;      
+  convenio?: string;
+  vip?: boolean;
+  avatar_url?: string | null;
 }
 
 export default function PacientesPage() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
+  const [filteredPacientes, setFilteredPacientes] = useState<Paciente[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Paciente | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // --- ESTADOS DOS FILTROS ---
   const [searchTerm, setSearchTerm] = useState("");
-  const [convenioFilter, setConvenioFilter] = useState("todos");
-  const [vipFilter, setVipFilter] = useState("todos");
+  const [filters, setFilters] = useState({ convenio: "all", vip: "all" });
+  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(1);
 
-  // --- Lógica de Filtragem ---
-  const filteredPacientes = pacientes.filter((p) => {
-    // 1. Filtro de Texto (Nome ou Telefone)
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = p.nome?.toLowerCase().includes(searchLower) || p.telefone?.includes(searchLower);
-
-    // 2. Filtro de Convênio
-    // Se for "todos", passa. Se não, verifica se o convênio do paciente é igual ao selecionado.
-    const matchesConvenio = convenioFilter === "todos" || (p.convenio?.toLowerCase() === convenioFilter);
-
-    // 3. Filtro VIP
-    // Se for "todos", passa. Se não, verifica se o status VIP é igual ao selecionado.
-    const matchesVip = vipFilter === "todos" || (p.vip?.toLowerCase() === vipFilter);
-
-    return matchesSearch && matchesConvenio && matchesVip;
-  });
-
-  // --- Lógica de Paginação ---
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // Resetar página quando qualquer filtro mudar
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, convenioFilter, vipFilter, itemsPerPage]);
-
-  const totalPages = Math.ceil(filteredPacientes.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredPacientes.slice(indexOfFirstItem, indexOfLastItem);
-
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
-
-  const goToPrevPage = () => {
-    setCurrentPage((prev) => Math.max(1, prev - 1));
-  };
-
-  const goToNextPage = () => {
-    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
-  };
-
-  const getVisiblePageNumbers = (totalPages: number, currentPage: number) => {
-    const pages: number[] = [];
-    const maxVisiblePages = 5;
-    const halfRange = Math.floor(maxVisiblePages / 2);
-    let startPage = Math.max(1, currentPage - halfRange);
-    let endPage = Math.min(totalPages, currentPage + halfRange);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      if (endPage === totalPages) {
-        startPage = Math.max(1, totalPages - maxVisiblePages + 1);
-      }
-      if (startPage === 1) {
-        endPage = Math.min(totalPages, maxVisiblePages);
-      }
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-    return pages;
-  };
-
-  const visiblePageNumbers = getVisiblePageNumbers(totalPages, currentPage);
-
-  const handleItemsPerPageChange = (value: string) => {
-    setItemsPerPage(Number(value));
-    setCurrentPage(1);
-  };
-
-  const handleOpenModal = (patient: Paciente) => {
-    setSelectedPatient(patient);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedPatient(null);
-    setIsModalOpen(false);
-  };
-
-  const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString) return "N/A";
-    try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat("pt-BR").format(date);
-    } catch (e) {
-      return dateString;
-    }
-  };
+  const handleSearch = (term: string) => { setSearchTerm(term); setPage(1); };
+  const handleFilterChange = (key: string, value: string) => { setFilters(prev => ({ ...prev, [key]: value })); setPage(1); };
+  const handleClearFilters = () => { setSearchTerm(""); setFilters({ convenio: "all", vip: "all" }); setPage(1); };
 
   const fetchPacientes = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const json = await api.get("/rest/v1/patients");
-      const items = Array.isArray(json)
-        ? json
-        : Array.isArray(json?.data)
-        ? json.data
-        : [];
+      const items = await patientsService.list();
 
-      const mapped: Paciente[] = items.map((p: any) => ({
+      const mapped: Paciente[] = (Array.isArray(items) ? items : []).map((p: any) => ({
         id: String(p.id ?? ""),
         nome: p.full_name ?? "—",
-        telefone: p.phone_mobile ?? "N/A",
-        cidade: p.city ?? "N/A",
-        estado: p.state ?? "N/A",
-        ultimoAtendimento: formatDate(p.created_at),
-        proximoAtendimento: "N/A",
-        email: p.email ?? "N/A",
-        birth_date: p.birth_date ?? "N/A",
-        cpf: p.cpf ?? "N/A",
-        blood_type: p.blood_type ?? "N/A",
+        telefone: p.phone_mobile ?? "—",
+        cidade: p.city ?? "—",
+        estado: p.state ?? "—",
+        ultimoAtendimento: p.last_visit_at?.split("T")[0] ?? "—",
+        email: p.email ?? "—",
+        birth_date: p.birth_date ?? "—",
+        cpf: p.cpf ?? "—",
+        blood_type: p.blood_type ?? "—",
         weight_kg: p.weight_kg ?? 0,
         height_m: p.height_m ?? 0,
-        street: p.street ?? "N/A",
-        number: p.number ?? "N/A",
-        complement: p.complement ?? "N/A",
-        neighborhood: p.neighborhood ?? "N/A",
-        cep: p.cep ?? "N/A",
-        
-        // ⚠️ ATENÇÃO: Verifique o nome real desses campos na sua API
-        // Se a API não retorna, estou colocando valores padrão para teste
-        convenio: p.insurance_plan || p.convenio || "Unimed", // Exemplo: mapeie o campo correto
-        vip: p.is_vip ? "Sim" : "Não", // Exemplo: se for booleano converta para string
+        street: p.street ?? "—",
+        number: p.number ?? "—",
+        complement: p.complement ?? "—",
+        neighborhood: p.neighborhood ?? "—",
+        cep: p.cep ?? "—",
+        convenio: p.convenio ?? p.insurance_plan ?? "Particular",
+        vip: Boolean(p.vip ?? p.is_vip ?? false),
+        avatar_url: p.avatar_url ?? null,
       }));
 
       setPacientes(mapped);
@@ -194,251 +95,214 @@ export default function PacientesPage() {
     }
   }, []);
 
+  useEffect(() => { fetchPacientes(); }, [fetchPacientes]);
+
   useEffect(() => {
-    fetchPacientes();
-  }, [fetchPacientes]);
+    const filtered = pacientes.filter((p) => {
+      const matchesSearch =
+        p.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.telefone?.includes(searchTerm);
+      const matchesConvenio = filters.convenio === "all" || p.convenio === filters.convenio;
+      const matchesVip =
+        filters.vip === "all" ||
+        (filters.vip === "vip" && p.vip) ||
+        (filters.vip === "regular" && !p.vip);
+      return matchesSearch && matchesConvenio && matchesVip;
+    });
+    setFilteredPacientes(filtered);
+    setPage(1);
+  }, [pacientes, searchTerm, filters]);
+
+  const totalPages = Math.ceil(filteredPacientes.length / pageSize);
+  const currentItems = filteredPacientes.slice((page - 1) * pageSize, page * pageSize);
+
+  const getVisiblePageNumbers = (total: number, current: number) => {
+    const pages: number[] = [];
+    const maxVisible = 5;
+    const half = Math.floor(maxVisible / 2);
+    let start = Math.max(1, current - half);
+    let end = Math.min(total, current + half);
+    if (end - start + 1 < maxVisible) {
+      if (end === total) start = Math.max(1, total - maxVisible + 1);
+      if (start === 1) end = Math.min(total, maxVisible);
+    }
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  };
+  const visiblePageNumbers = getVisiblePageNumbers(totalPages, page);
+
+  const ActionMenu = ({ patient }: { patient: Paciente }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Abrir menu</span>
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => { setSelectedPatient(patient); setIsModalOpen(true); }}>
+          <Eye className="w-4 h-4 mr-2" /> Ver detalhes
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={`/doctor/medicos/${patient.id}/laudos`} className="flex items-center w-full">
+            <Edit className="w-4 h-4 mr-2" /> Laudos
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   return (
     <Sidebar>
-      <div className="space-y-6 px-2 sm:px-4 md:px-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="space-y-6 px-2 sm:px-4 md:px-6 pb-20">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Pacientes</h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Lista de pacientes vinculados
-            </p>
+            <h1 className="text-2xl font-bold">Pacientes</h1>
+            <p className="text-sm text-muted-foreground">Lista de pacientes vinculados</p>
           </div>
         </div>
 
-        {/* --- BARRA DE PESQUISA COM FILTROS ATIVOS --- */}
-        <div className="flex flex-col md:flex-row gap-4 items-center p-2 border border-border rounded-lg bg-card shadow-sm">
-            
-            {/* Input de Busca */}
-            <div className="flex items-center gap-3 flex-1 w-full px-2">
-                <Filter className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                <Input 
-                    type="text" 
-                    placeholder="Buscar por nome ou telefone..." 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="border-0 focus-visible:ring-0 shadow-none bg-transparent px-0 h-auto text-base placeholder:text-muted-foreground"
-                />
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearch={handleSearch}
+          activeFilters={filters}
+          onFilterChange={handleFilterChange}
+          onClearFilters={handleClearFilters}
+          searchPlaceholder="Buscar por nome ou telefone..."
+          filters={[
+            { key: "convenio", label: "Convênio", options: ["Particular", "SUS", "Unimed"] },
+            { key: "vip", label: "VIP", options: [{ label: "VIP", value: "vip" }, { label: "Regular", value: "regular" }] },
+          ]}
+        >
+          <div className="hidden lg:block">
+            <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+              <SelectTrigger className="w-[70px]"><SelectValue placeholder="10" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </FilterBar>
+
+        {/* Tabela Desktop */}
+        <div className="bg-card rounded-lg border shadow-md overflow-hidden hidden md:block">
+          {loading ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-primary" />
+              Carregando pacientes...
             </div>
-
-            {/* Filtros e Paginação */}
-            <div className="flex flex-wrap items-center gap-4 w-full md:w-auto px-2 border-t md:border-t-0 md:border-l border-border pt-2 md:pt-0 justify-end">
-                
-                {/* FILTRO CONVÊNIO */}
-                <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium whitespace-nowrap text-muted-foreground hidden lg:inline">Convênio</span>
-                    <Select value={convenioFilter} onValueChange={setConvenioFilter}>
-                        <SelectTrigger className="w-[100px] h-8 border-border bg-transparent focus:ring-0">
-                            <SelectValue placeholder="Todos" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="todos">Todos</SelectItem>
-                            {/* Certifique-se que o 'value' aqui seja minúsculo para bater com a lógica do filtro */}
-                            <SelectItem value="unimed">Unimed</SelectItem>
-                            <SelectItem value="bradesco">Bradesco</SelectItem>
-                            <SelectItem value="particular">Particular</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                {/* FILTRO VIP */}
-                <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium whitespace-nowrap text-muted-foreground hidden lg:inline">VIP</span>
-                    <Select value={vipFilter} onValueChange={setVipFilter}>
-                        <SelectTrigger className="w-[90px] h-8 border-border bg-transparent focus:ring-0">
-                            <SelectValue placeholder="Todos" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="todos">Todos</SelectItem>
-                            <SelectItem value="sim">Sim</SelectItem>
-                            <SelectItem value="não">Não</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                {/* PAGINAÇÃO */}
-                <div className="flex items-center gap-2 pl-2 md:border-l border-border">
-                   <Select
-                      onValueChange={handleItemsPerPageChange}
-                      defaultValue={String(itemsPerPage)}
-                    >
-                      <SelectTrigger className="w-[130px] h-8 border-border bg-transparent focus:ring-0">
-                        <SelectValue placeholder="Paginação" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="5">5 por página</SelectItem>
-                        <SelectItem value="10">10 por página</SelectItem>
-                        <SelectItem value="20">20 por página</SelectItem>
-                      </SelectContent>
-                    </Select>
-                </div>
-
+          ) : error ? (
+            <div className="p-8 text-center text-destructive">{error}</div>
+          ) : filteredPacientes.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              {pacientes.length === 0 ? "Nenhum paciente cadastrado." : "Nenhum paciente encontrado com os filtros aplicados."}
             </div>
-        </div>
-
-        {/* Tabela de Dados */}
-        <div className="bg-card rounded-lg border border-border overflow-hidden shadow-md">
-          <div className="overflow-x-auto hidden md:block">
-            <table className="min-w-[600px] w-full">
-              <thead className="bg-muted border-b border-border">
-                <tr>
-                  <th className="text-left p-3 sm:p-4 font-medium text-foreground">Nome</th>
-                  <th className="text-left p-3 sm:p-4 font-medium text-foreground">Telefone</th>
-                  {/* Coluna Convênio visível para teste */}
-                  <th className="text-left p-3 sm:p-4 font-medium text-foreground hidden lg:table-cell">Convênio</th>
-                  <th className="text-left p-3 sm:p-4 font-medium text-foreground hidden lg:table-cell">VIP</th>
-                  <th className="text-left p-3 sm:p-4 font-medium text-foreground hidden xl:table-cell">Último atendimento</th>
-                  <th className="text-left p-3 sm:p-4 font-medium text-foreground">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[650px]">
+                <thead className="bg-muted border-b">
                   <tr>
-                    <td colSpan={7} className="p-6 text-muted-foreground text-center">
-                      <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
-                      Carregando pacientes...
-                    </td>
+                    <th className="text-left p-2 md:p-4 font-medium text-muted-foreground">Nome</th>
+                    <th className="text-left p-2 md:p-4 font-medium text-muted-foreground hidden sm:table-cell">Telefone</th>
+                    <th className="text-left p-2 md:p-4 font-medium text-muted-foreground hidden md:table-cell">Cidade / Estado</th>
+                    <th className="text-left p-2 md:p-4 font-medium text-muted-foreground hidden sm:table-cell">Convênio</th>
+                    <th className="text-left p-2 md:p-4 font-medium text-muted-foreground hidden lg:table-cell">Último atendimento</th>
+                    <th className="text-right p-4 font-medium text-muted-foreground">Ações</th>
                   </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan={7} className="p-6 text-red-600 text-center">{`Erro: ${error}`}</td>
-                  </tr>
-                ) : filteredPacientes.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                       Nenhum paciente encontrado com esses filtros.
-                    </td>
-                  </tr>
-                ) : (
-                  currentItems.map((p) => (
-                    <tr key={p.id} className="border-b border-border hover:bg-accent/40 transition-colors">
-                      <td className="p-3 sm:p-4">{p.nome}</td>
-                      <td className="p-3 sm:p-4 text-muted-foreground">{p.telefone}</td>
-                      <td className="p-3 sm:p-4 text-muted-foreground hidden lg:table-cell">{p.convenio}</td>
-                      <td className="p-3 sm:p-4 text-muted-foreground hidden lg:table-cell">{p.vip}</td>
-                      <td className="p-3 sm:p-4 text-muted-foreground hidden xl:table-cell">{p.ultimoAtendimento}</td>
-                      <td className="p-3 sm:p-4">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Abrir menu</span>
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleOpenModal(p)}>
-                              <Eye className="w-4 h-4 mr-2" />
-                              Ver detalhes
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/doctor/medicos/${p.id}/laudos`}>
-                                <Edit className="w-4 h-4 mr-2" />
-                                Laudos
-                              </Link>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                </thead>
+                <tbody className="bg-card divide-y">
+                  {currentItems.map((p) => (
+                    <tr key={p.id} className="hover:bg-muted transition">
+                      <td className="px-4 py-3 font-medium">
+                        <div className="flex items-center gap-3">
+                          <UserAvatar name={p.nome} avatarUrl={p.avatar_url} />
+                          <span>
+                            {p.nome}
+                            {p.vip && <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full text-purple-400 bg-purple-400/15">VIP</span>}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{p.telefone}</td>
+                      <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{`${p.cidade} / ${p.estado}`}</td>
+                      <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{p.convenio}</td>
+                      <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{p.ultimoAtendimento}</td>
+                      <td className="px-4 py-3 text-right">
+                        <ActionMenu patient={p} />
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Cards para Mobile */}
-          <div className="md:hidden divide-y divide-border">
-            {loading ? (
-              <div className="p-6 text-muted-foreground text-center">
-                <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
-                Carregando...
-              </div>
-            ) : filteredPacientes.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                 Nenhum paciente encontrado.
-              </div>
-            ) : (
-              currentItems.map((p) => (
-                <div key={p.id} className="flex items-center justify-between p-4 hover:bg-accent/40 transition-colors">
-                  <div className="flex-1 min-w-0 pr-4">
-                    <div className="text-base font-semibold text-foreground break-words">
-                      {p.nome || "—"}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                       {p.telefone} | {p.convenio} | VIP: {p.vip}
-                    </div>
-                  </div>
-                  <div className="ml-4 flex-shrink-0">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleOpenModal(p)}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          Ver detalhes
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/doctor/pacientes/${p.id}/laudos`}>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Laudos
-                          </Link>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Paginação */}
-          {totalPages > 1 && (
-            <div className="flex flex-wrap justify-center items-center gap-2 border-t border-border p-4 bg-muted/40">
-              <button
-                onClick={goToPrevPage}
-                disabled={currentPage === 1}
-                className="flex items-center px-4 py-2 rounded-md font-medium transition-colors text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed border border-border"
-              >
-                {"< Anterior"}
-              </button>
-
-              {visiblePageNumbers.map((number) => (
-                <button
-                  key={number}
-                  onClick={() => paginate(number)}
-                  className={`px-4 py-2 rounded-md font-medium transition-colors text-sm border border-border ${
-                    currentPage === number
-                      ? "bg-blue-600 text-primary-foreground shadow-md border-blue-600"
-                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                  }`}
-                >
-                  {number}
-                </button>
-              ))}
-
-              <button
-                onClick={goToNextPage}
-                disabled={currentPage === totalPages}
-                className="flex items-center px-4 py-2 rounded-md font-medium transition-colors text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed border border-border"
-              >
-                {"Próximo >"}
-              </button>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
+
+        {/* Cards Mobile */}
+        <div className="bg-card rounded-lg border shadow-md p-4 block md:hidden">
+          {loading ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-primary" />
+              Carregando pacientes...
+            </div>
+          ) : error ? (
+            <div className="p-8 text-center text-destructive">{error}</div>
+          ) : filteredPacientes.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              {pacientes.length === 0 ? "Nenhum paciente cadastrado." : "Nenhum paciente encontrado com os filtros aplicados."}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {currentItems.map((p) => (
+                <div key={p.id} className="bg-muted rounded-lg p-4 flex justify-between items-center border">
+                  <div className="flex items-center gap-3">
+                    <UserAvatar name={p.nome} avatarUrl={p.avatar_url} />
+                    <div>
+                      <div className="font-semibold flex items-center gap-2">
+                        {p.nome}
+                        {p.vip && <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full text-purple-400 bg-purple-400/15 uppercase">VIP</span>}
+                      </div>
+                      <div className="text-xs text-muted-foreground mb-1">{p.telefone}</div>
+                      <div className="text-sm text-muted-foreground">{p.convenio}</div>
+                      <div className="text-xs text-muted-foreground">{p.cidade} / {p.estado}</div>
+                    </div>
+                  </div>
+                  <ActionMenu patient={p} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Paginação */}
+        {totalPages > 1 && !loading && (
+          <div className="flex flex-wrap justify-center items-center gap-2 mt-4 p-4 bg-card rounded-lg border shadow-md">
+            <button
+              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              disabled={page === 1}
+              className="flex items-center px-4 py-2 rounded-md font-medium transition-colors text-sm bg-muted text-muted-foreground hover:bg-muted/90 disabled:opacity-50 disabled:cursor-not-allowed border"
+            >{"< Anterior"}</button>
+            {visiblePageNumbers.map((number) => (
+              <button
+                key={number}
+                onClick={() => setPage(number)}
+                className={`px-4 py-2 rounded-md font-medium transition-colors text-sm border ${page === number ? "bg-primary text-primary-foreground shadow-md border-primary" : "bg-muted text-muted-foreground hover:bg-muted/90"}`}
+              >{number}</button>
+            ))}
+            <button
+              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={page === totalPages}
+              className="flex items-center px-4 py-2 rounded-md font-medium transition-colors text-sm bg-muted text-muted-foreground hover:bg-muted/90 disabled:opacity-50 disabled:cursor-not-allowed border"
+            >{"Próximo >"}</button>
+          </div>
+        )}
       </div>
 
       <PatientDetailsModal
         patient={selectedPatient}
         isOpen={isModalOpen}
-        onClose={handleCloseModal}
+        onClose={() => { setSelectedPatient(null); setIsModalOpen(false); }}
       />
     </Sidebar>
   );

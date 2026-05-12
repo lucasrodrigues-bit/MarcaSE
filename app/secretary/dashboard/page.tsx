@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, User, Plus } from "lucide-react";
+import { Calendar, Clock, CalendarPlus, Users } from "lucide-react";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { patientsService } from "@/services/patientsApi.mjs";
@@ -104,7 +104,7 @@ export default function SecretaryDashboard() {
       <div className="space-y-6">
         {/* Cabeçalho */}
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
             Bem-vindo ao seu portal de consultas médicas
           </p>
@@ -231,15 +231,15 @@ export default function SecretaryDashboard() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Link href="/secretary/schedule">
-                <Button className="w-full justify-start bg-primary text-primary-foreground hover:bg-primary/90">
-                  <User className="mr-2 h-4 w-4" />
+                <Button className="w-full justify-start">
+                  <CalendarPlus className="mr-2 h-4 w-4" />
                   Agendar Nova Consulta
                 </Button>
               </Link>
               <Link href="/secretary/appointments">
                 <Button
                   variant="outline"
-                  className="w-full justify-start bg-transparent"
+                  className="w-full justify-start"
                 >
                   <Calendar className="mr-2 h-4 w-4" />
                   Ver Consultas
@@ -248,9 +248,9 @@ export default function SecretaryDashboard() {
               <Link href="/secretary/pacientes">
                 <Button
                   variant="outline"
-                  className="w-full justify-start bg-transparent"
+                  className="w-full justify-start"
                 >
-                  <User className="mr-2 h-4 w-4" />
+                  <Users className="mr-2 h-4 w-4" />
                   Gerenciar Pacientes
                 </Button>
               </Link>

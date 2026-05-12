@@ -24,26 +24,30 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 
 import {
   LogOut,
-  ChevronLeft,
-  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
   LayoutDashboard,
   CalendarPlus,
   CalendarCheck2,
-  CalendarRange,
+  CalendarClock,
   Users,
-  UserCircle,
-  UserCog,
-  FileText,
+  CircleUser,
+  UsersRound,
+  ScrollText,
   Stethoscope,
-  HeartPulse,
-  Activity,
+  UserSearch,
+  Loader2,
+  Menu,
+  FileText,
 } from "lucide-react";
 
 import UserTopbarMenu from "@/components/ui/userToolTip";
+import NotificationBell from "@/components/NotificationBell";
 
 interface UserData {
   id: string;
@@ -106,6 +110,8 @@ export default function Sidebar({ children }: SidebarProps) {
   const [userData, setUserData] = useState<UserData>();
   const [role, setRole] = useState<string>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [avatarFullUrl, setAvatarFullUrl] = useState<string | undefined>(
     undefined,
@@ -210,7 +216,11 @@ export default function Sidebar({ children }: SidebarProps) {
 
   useEffect(() => {
     const handleResize = () => {
-      setSidebarCollapsed(window.innerWidth < 1024);
+      const width = window.innerWidth;
+      const mobile = width < 768;
+      setIsMobile(mobile);
+      setSidebarCollapsed(width < 1024);
+      if (!mobile) setMobileMenuOpen(false);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -255,13 +265,13 @@ export default function Sidebar({ children }: SidebarProps) {
       },
       {
         href: "/patient/reports",
-        icon: FileText,
+        icon: ScrollText,
         label: "Meus Laudos",
         description: "Documentos",
       },
       {
         href: "/patient/profile",
-        icon: UserCircle,
+        icon: CircleUser,
         label: "Meus Dados",
         description: "Perfil",
       },
@@ -276,7 +286,7 @@ export default function Sidebar({ children }: SidebarProps) {
       },
       {
         href: "/doctor/medicos",
-        icon: HeartPulse,
+        icon: Users,
         label: "Gestão de Pacientes",
         description: "Pacientes",
       },
@@ -288,13 +298,13 @@ export default function Sidebar({ children }: SidebarProps) {
       },
       {
         href: "/doctor/disponibilidade",
-        icon: CalendarRange,
+        icon: CalendarClock,
         label: "Disponibilidade",
         description: "Agenda",
       },
       {
         href: "/patient/profile",
-        icon: UserCircle,
+        icon: CircleUser,
         label: "Meus Dados",
         description: "Perfil",
       },
@@ -321,7 +331,7 @@ export default function Sidebar({ children }: SidebarProps) {
       },
       {
         href: "/secretary/pacientes",
-        icon: Users,
+        icon: UserSearch,
         label: "Gestão de Pacientes",
         description: "Pacientes",
       },
@@ -333,7 +343,7 @@ export default function Sidebar({ children }: SidebarProps) {
       },
       {
         href: "/patient/profile",
-        icon: UserCircle,
+        icon: CircleUser,
         label: "Meus Dados",
         description: "Perfil",
       },
@@ -348,7 +358,7 @@ export default function Sidebar({ children }: SidebarProps) {
       },
       {
         href: "/manager/usuario",
-        icon: UserCog,
+        icon: UsersRound,
         label: "Gestão de Usuários",
         description: "Usuários",
       },
@@ -372,7 +382,7 @@ export default function Sidebar({ children }: SidebarProps) {
       },
       {
         href: "/manager/disponibilidade",
-        icon: CalendarRange,
+        icon: CalendarClock,
         label: "Disponibilidade",
         description: "Agenda",
       },
@@ -384,7 +394,7 @@ export default function Sidebar({ children }: SidebarProps) {
       },
       {
         href: "/patient/profile",
-        icon: UserCircle,
+        icon: CircleUser,
         label: "Meus Dados",
         description: "Dados do usuario",
       },
@@ -416,263 +426,293 @@ export default function Sidebar({ children }: SidebarProps) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
-          <Activity className="w-8 h-8 text-muted-foreground animate-pulse" />
+          <Loader2 className="w-7 h-7 text-primary animate-spin" />
           <span className="text-sm text-muted-foreground">Carregando...</span>
         </div>
       </div>
     );
   }
 
-  return (
-    <TooltipProvider delayDuration={0}>
-      <div className="min-h-screen bg-background flex">
-        {/* ─── SIDEBAR ─────────────────────────────────────────────── */}
-        <aside
+  const sidebarBgClass = isDefaultMode
+    ? "bg-[#0f2d4e] text-white shadow-xl shadow-black/20"
+    : "bg-sidebar text-sidebar-foreground shadow-md";
+
+  // ── Conteúdo da navegação reutilizado no aside e no Sheet mobile ──────────
+  const NavContent = ({ alwaysExpanded = false }: { alwaysExpanded?: boolean }) => {
+    const collapsed = alwaysExpanded ? false : sidebarCollapsed;
+
+    return (
+      <>
+        {/* ── LOGO ÁREA ─────────────────────────────────────── */}
+        <div
           className={`
-            fixed top-0 h-screen flex flex-col z-30
-            transition-all duration-300 ease-in-out
-            ${sidebarCollapsed ? "w-[68px]" : "w-64"}
-            ${
-              isDefaultMode
-                ? "bg-[#0f2d4e] text-white shadow-xl shadow-black/20"
-                : "bg-sidebar text-sidebar-foreground shadow-md"
-            }
+            flex items-center h-16 px-3 shrink-0
+            border-b transition-colors duration-300
+            ${isDefaultMode ? "border-white/10" : "border-sidebar-border"}
+            ${collapsed ? "justify-center" : "justify-between"}
           `}
         >
-          {/* ── LOGO ÁREA ─────────────────────────────────────── */}
-          <div
-            className={`
-              flex items-center h-16 px-3 shrink-0
-              border-b transition-colors duration-300
-              ${isDefaultMode ? "border-white/10" : "border-sidebar-border"}
-              ${sidebarCollapsed ? "justify-center" : "justify-between"}
-            `}
-          >
-            {!sidebarCollapsed && (
-              <div className="flex items-center gap-3 overflow-hidden">
-                <div
-                  className={`
-                    rounded-xl p-1.5 shrink-0 transition-colors
-                    ${isDefaultMode ? "bg-white/10 ring-1 ring-white/20" : "bg-background"}
-                  `}
-                >
-                  <img
-                    src="/Logo MedConnect.png"
-                    alt="Logo MarcaSE"
-                    className="w-9 h-9 object-contain"
-                  />
-                </div>
-                <div className="flex flex-col leading-none">
-                  <span className="font-bold text-[15px] tracking-tight">
-                    MarcaSE
-                  </span>
-                  <span
-                    className={`text-[10px] font-medium tracking-widest uppercase mt-0.5
-                      ${isDefaultMode ? "text-white/40" : "text-sidebar-foreground/40"}`}
-                  >
-                    Saúde Digital
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {sidebarCollapsed && (
+          {!collapsed && (
+            <div className="flex items-center gap-3 overflow-hidden">
               <div
                 className={`
-                  rounded-xl p-1.5
+                  rounded-xl p-1.5 shrink-0 transition-colors
                   ${isDefaultMode ? "bg-white/10 ring-1 ring-white/20" : "bg-background"}
                 `}
               >
                 <img
                   src="/Logo MedConnect.png"
                   alt="Logo MarcaSE"
-                  className="w-8 h-8 object-contain"
+                  className="w-9 h-9 object-contain"
                 />
               </div>
-            )}
-
-            {!sidebarCollapsed && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSidebarCollapsed(true)}
-                className={`
-                  w-7 h-7 rounded-lg shrink-0 transition-colors
-                  ${
-                    isDefaultMode
-                      ? "text-white/60 hover:text-white hover:bg-white/10"
-                      : "hover:bg-sidebar-accent"
-                  }
-                `}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-
-          {/* ── ROLE BADGE ─────────────────────────────────────── */}
-          {!sidebarCollapsed && roleInfo && (
-            <div className="px-4 pt-4 pb-1">
-              <span
-                className={`
-                  inline-flex items-center gap-1.5 text-[10px] font-semibold
-                  tracking-widest uppercase px-2.5 py-1 rounded-full border
-                  ${
-                    isDefaultMode
-                      ? "bg-white/10 text-white/70 border-white/20"
-                      : roleInfo.color
-                  }
-                `}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
-                {roleInfo.label}
-              </span>
+              <div className="flex flex-col leading-none">
+                <span className="font-bold text-[15px] tracking-tight">
+                  MarcaSE
+                </span>
+                <span
+                  className={`text-[10px] font-medium tracking-widest uppercase mt-0.5
+                    ${isDefaultMode ? "text-white/40" : "text-sidebar-foreground/40"}`}
+                >
+                  Saúde Digital
+                </span>
+              </div>
             </div>
           )}
 
-          {/* ── NAVIGATION ─────────────────────────────────────── */}
-          <nav className="flex-1 px-2 py-3 overflow-y-auto flex flex-col gap-0.5 scrollbar-thin">
-            {menuItems.map((item, index) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              const isHovered = hoveredItem === item.href;
+          {collapsed && (
+            <div
+              className={`
+                rounded-xl p-1.5
+                ${isDefaultMode ? "bg-white/10 ring-1 ring-white/20" : "bg-background"}
+              `}
+            >
+              <img
+                src="/Logo MedConnect.png"
+                alt="Logo MarcaSE"
+                className="w-8 h-8 object-contain"
+              />
+            </div>
+          )}
 
-              const navItem = (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onMouseEnter={() => setHoveredItem(item.href)}
-                  onMouseLeave={() => setHoveredItem(null)}
+          {!collapsed && !alwaysExpanded && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarCollapsed(true)}
+              className={`
+                w-7 h-7 rounded-lg shrink-0 transition-colors
+                ${
+                  isDefaultMode
+                    ? "text-white/60 hover:text-white hover:bg-white/10"
+                    : "hover:bg-sidebar-accent"
+                }
+              `}
+            >
+              <PanelLeftClose className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+
+        {/* ── ROLE BADGE ─────────────────────────────────────── */}
+        {!collapsed && roleInfo && (
+          <div className="px-4 pt-4 pb-1">
+            <span
+              className={`
+                inline-flex items-center gap-1.5 text-[10px] font-semibold
+                tracking-widest uppercase px-2.5 py-1 rounded-full border
+                ${
+                  isDefaultMode
+                    ? "bg-white/10 text-white/70 border-white/20"
+                    : roleInfo.color
+                }
+              `}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+              {roleInfo.label}
+            </span>
+          </div>
+        )}
+
+        {/* ── NAVIGATION ─────────────────────────────────────── */}
+        <nav className="flex-1 px-2 py-3 overflow-y-auto flex flex-col gap-0.5 scrollbar-none">
+          {menuItems.map((item, index) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+            const isHovered = hoveredItem === item.href;
+
+            const navItem = (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => isMobile && setMobileMenuOpen(false)}
+                onMouseEnter={() => setHoveredItem(item.href)}
+                onMouseLeave={() => setHoveredItem(null)}
+              >
+                <div
+                  className={`
+                    relative flex items-center gap-3 rounded-xl
+                    transition-all duration-150 ease-out
+                    ${collapsed ? "px-0 py-2.5 justify-center" : "px-3 py-2.5"}
+                    ${
+                      isActive
+                        ? isDefaultMode
+                          ? "bg-white/15 text-white shadow-sm"
+                          : "bg-sidebar-primary text-sidebar-primary-foreground"
+                        : isDefaultMode
+                          ? "text-white/65 hover:text-white hover:bg-white/8"
+                          : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sidebar-foreground/75"
+                    }
+                  `}
+                  style={{ animationDelay: `${index * 40}ms` }}
                 >
+                  {isActive && (
+                    <span
+                      className={`
+                        absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full
+                        ${isDefaultMode ? "bg-white" : "bg-sidebar-primary-foreground"}
+                      `}
+                    />
+                  )}
+
                   <div
                     className={`
-                      relative flex items-center gap-3 rounded-xl
-                      transition-all duration-150 ease-out
-                      ${sidebarCollapsed ? "px-0 py-2.5 justify-center" : "px-3 py-2.5"}
-                      ${
-                        isActive
-                          ? isDefaultMode
-                            ? "bg-white/15 text-white shadow-sm"
-                            : "bg-sidebar-primary text-sidebar-primary-foreground"
-                          : isDefaultMode
-                            ? "text-white/65 hover:text-white hover:bg-white/8"
-                            : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sidebar-foreground/75"
-                      }
+                      flex items-center justify-center w-[18px] h-[18px] shrink-0
+                      transition-transform duration-150
+                      ${isActive || isHovered ? "scale-110" : "scale-100"}
                     `}
-                    style={{
-                      animationDelay: `${index * 40}ms`,
-                    }}
                   >
-                    {/* Active left indicator */}
-                    {isActive && (
-                      <span
-                        className={`
-                          absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full
-                          ${isDefaultMode ? "bg-white" : "bg-sidebar-primary-foreground"}
-                        `}
-                      />
-                    )}
-
-                    {/* Icon */}
-                    <div
-                      className={`
-                        flex items-center justify-center w-[18px] h-[18px] shrink-0
-                        transition-transform duration-150
-                        ${isActive || isHovered ? "scale-110" : "scale-100"}
-                      `}
-                    >
-                      <Icon
-                        className="w-[18px] h-[18px]"
-                        strokeWidth={isActive ? 2.5 : 1.75}
-                      />
-                    </div>
-
-                    {/* Label + Description */}
-                    {!sidebarCollapsed && (
-                      <div className="flex flex-col min-w-0">
-                        <span
-                          className={`text-sm leading-none ${isActive ? "font-semibold" : "font-medium"}`}
-                        >
-                          {item.label}
-                        </span>
-                        {item.description && !isActive && (
-                          <span
-                            className={`text-[10px] mt-0.5 truncate
-                              ${isDefaultMode ? "text-white/35" : "text-sidebar-foreground/40"}`}
-                          >
-                            {item.description}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    <Icon
+                      className="w-[18px] h-[18px]"
+                      strokeWidth={isActive ? 2.5 : 1.75}
+                    />
                   </div>
-                </Link>
-              );
 
-              return sidebarCollapsed ? (
-                <Tooltip key={item.href}>
-                  <TooltipTrigger asChild>{navItem}</TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    className="flex flex-col gap-0.5"
-                  >
-                    <span className="font-semibold text-sm">{item.label}</span>
-                    {item.description && (
-                      <span className="text-xs text-muted-foreground">
-                        {item.description}
+                  {!collapsed && (
+                    <div className="flex flex-col min-w-0">
+                      <span
+                        className={`text-sm leading-none ${isActive ? "font-semibold" : "font-medium"}`}
+                      >
+                        {item.label}
                       </span>
-                    )}
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                navItem
-              );
-            })}
-          </nav>
+                      {item.description && !isActive && (
+                        <span
+                          className={`text-[10px] mt-0.5 truncate
+                            ${isDefaultMode ? "text-white/35" : "text-sidebar-foreground/40"}`}
+                        >
+                          {item.description}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Link>
+            );
 
-          {/* ── EXPAND BUTTON (collapsed state) ────────────────── */}
-          {sidebarCollapsed && (
-            <div className="flex justify-center px-2 pb-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSidebarCollapsed(false)}
-                    className={`
-                      w-9 h-9 rounded-xl transition-colors
-                      ${
-                        isDefaultMode
-                          ? "text-white/50 hover:text-white hover:bg-white/10"
-                          : "hover:bg-sidebar-accent"
-                      }
-                    `}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">Expandir menu</TooltipContent>
+            return collapsed ? (
+              <Tooltip key={item.href}>
+                <TooltipTrigger asChild>{navItem}</TooltipTrigger>
+                <TooltipContent side="right" className="flex flex-col gap-0.5">
+                  <span className="font-semibold text-sm">{item.label}</span>
+                  {item.description && (
+                    <span className="text-xs text-muted-foreground">
+                      {item.description}
+                    </span>
+                  )}
+                </TooltipContent>
               </Tooltip>
-            </div>
-          )}
+            ) : (
+              navItem
+            );
+          })}
+        </nav>
+
+        {/* ── EXPAND BUTTON (estado colapsado no desktop) ─────── */}
+        {collapsed && !alwaysExpanded && (
+          <div className="flex justify-center px-2 pb-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSidebarCollapsed(false)}
+                  className={`
+                    w-9 h-9 rounded-xl transition-colors
+                    ${
+                      isDefaultMode
+                        ? "text-white/50 hover:text-white hover:bg-white/10"
+                        : "hover:bg-sidebar-accent"
+                    }
+                  `}
+                >
+                  <PanelLeftOpen className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Expandir menu</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <div className="min-h-screen bg-background flex">
+
+        {/* ─── SIDEBAR DESKTOP (oculta no mobile) ──────────────────── */}
+        <aside
+          className={`
+            hidden md:flex fixed top-0 h-screen flex-col z-30
+            transition-all duration-300 ease-in-out
+            ${sidebarCollapsed ? "w-[68px]" : "w-64"}
+            ${sidebarBgClass}
+          `}
+        >
+          <NavContent />
         </aside>
+
+        {/* ─── SIDEBAR MOBILE (Sheet/Drawer com overlay) ───────────── */}
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetContent
+            side="left"
+            className={`p-0 w-72 border-r-0 flex flex-col ${sidebarBgClass}`}
+          >
+            <NavContent alwaysExpanded />
+          </SheetContent>
+        </Sheet>
 
         {/* ─── MAIN CONTENT ────────────────────────────────────────── */}
         <div
           className={`
             flex-1 flex flex-col min-h-screen
             transition-all duration-300 ease-in-out
-            ${sidebarCollapsed ? "ml-[68px]" : "ml-64"}
+            ${isMobile ? "ml-0" : sidebarCollapsed ? "ml-[68px]" : "ml-64"}
           `}
         >
           {/* ── TOPBAR ──────────────────────────────────────────── */}
-          <header className="h-16 border-b flex items-center justify-end px-6 bg-background shrink-0">
-            <UserTopbarMenu
-              userData={userData}
-              avatarUrl={avatarFullUrl}
-              handleLogout={handleLogout}
-              role={role}
-            />
+          <header className="h-16 border-b flex items-center justify-between px-4 md:px-6 bg-background shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden rounded-xl"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Abrir menu"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+
+            <div className="hidden md:block" />
+
+            <div className="flex items-center gap-2">
+              <NotificationBell userId={userData?.id} role={role} />
+              <UserTopbarMenu
+                userData={userData}
+                avatarUrl={avatarFullUrl}
+                handleLogout={handleLogout}
+                role={role}
+              />
+            </div>
           </header>
 
           <main className="flex-1 p-4 md:p-6">{children}</main>

@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescript
 import { api, login } from "@/services/api.mjs";
 import { usersService } from "@/services/usersApi.mjs";
 import Sidebar from "@/components/Sidebar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface FlatUser {
     id: string;
@@ -19,6 +20,7 @@ interface FlatUser {
     email: string;
     phone?: string | null;
     role: string;
+    avatar_url?: string | null;
 }
 
 interface UserInfoResponse {
@@ -61,14 +63,16 @@ export default function UsersPage() {
             const rolesData: any[] = await usersService.list_roles();
             const rolesArray = Array.isArray(rolesData) ? rolesData : [];
 
-            const profilesData: any[] = await api.get(`/rest/v1/profiles?select=id,full_name,email,phone`);
+            const profilesData: any[] = await api.get(`/rest/v1/profiles?select=id,full_name,email,phone,avatar_url`);
             const profilesById = new Map<string, any>();
             if (Array.isArray(profilesData)) {
                 for (const p of profilesData) { if (p?.id) profilesById.set(p.id, p); }
             }
 
-            const mapped: FlatUser[] = rolesArray.map((roleItem) => {
-                const uid = roleItem.user_id;
+    const mapped: FlatUser[] = rolesArray
+    .filter((roleItem) => profilesById.has(roleItem.user_id))
+    .map((roleItem) => {                
+    const uid = roleItem.user_id;
                 const profile = profilesById.get(uid);
                 return {
                     id: uid,
@@ -77,6 +81,7 @@ export default function UsersPage() {
                     email: profile?.email ?? "—",
                     phone: profile?.phone ?? "—",
                     role: roleItem.role ?? "—",
+                    avatar_url: profile?.avatar_url ?? null,
                 };
             });
 
@@ -244,11 +249,7 @@ export default function UsersPage() {
                                         <tr key={u.id} className="hover:bg-muted transition">
                                             <td className="px-4 py-3 font-medium">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                                        <span className="text-primary font-medium text-sm">
-                                                            {(u.full_name || u.email)?.charAt(0).toUpperCase()}
-                                                        </span>
-                                                    </div>
+                                                    <UserAvatar name={u.full_name || u.email} avatarUrl={u.avatar_url} />
                                                     {u.full_name}
                                                 </div>
                                             </td>
@@ -281,10 +282,13 @@ export default function UsersPage() {
                         <div className="space-y-4">
                             {currentItems.map((u) => (
                                 <div key={u.id} className="bg-muted rounded-lg p-4 flex justify-between items-center border">
-                                    <div>
-                                        <div className="font-semibold">{u.full_name || "—"}</div>
-                                        <div className="text-xs text-muted-foreground mb-1">{u.email}</div>
-                                        <div className="text-sm text-muted-foreground capitalize">{u.role}</div>
+                                    <div className="flex items-center gap-3">
+                                        <UserAvatar name={u.full_name || u.email} avatarUrl={u.avatar_url} />
+                                        <div>
+                                            <div className="font-semibold">{u.full_name || "—"}</div>
+                                            <div className="text-xs text-muted-foreground mb-1">{u.email}</div>
+                                            <div className="text-sm text-muted-foreground capitalize">{u.role}</div>
+                                        </div>
                                     </div>
                                     <ActionMenu user={u} />
                                 </div>
