@@ -238,6 +238,13 @@ export default function ScheduleForm() {
       return;
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (new Date(selectedDate) < today) {
+      toast({ title: "Data inválida", description: "Não é possível agendar consultas em datas passadas." });
+      return;
+    }
+
     try {
       const body = {
         doctor_id: selectedDoctor,
@@ -466,7 +473,12 @@ export default function ScheduleForm() {
                   <div ref={calendarRef} className="flex justify-center w-full overflow-x-auto">
                     <CalendarShadcn
                       mode="single"
-                      disabled={!selectedDoctor}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return !selectedDoctor || date < today;
+                      }}
+                      fromDate={new Date()}
                       selected={selectedDate ? new Date(selectedDate + "T12:00:00") : undefined}
                       onSelect={(date) => {
                         if (!date) return;
