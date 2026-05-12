@@ -1,7 +1,7 @@
 import Sidebar from "@/components/Sidebar";
 import ScheduleForm from "@/components/schedule/schedule-form";
 
-export default async function SecretaryAppointments({
+export default async function ManagerSchedulePage({
   searchParams,
 }: {
   searchParams: Promise<{ patientId?: string }>;
@@ -13,4 +13,3 @@ export default async function SecretaryAppointments({
     </Sidebar>
   );
 }
-

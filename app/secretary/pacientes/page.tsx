@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,7 +15,44 @@ import Sidebar from "@/components/Sidebar";
 import { FilterBar } from "@/components/ui/filter-bar";
 import { UserAvatar } from "@/components/ui/user-avatar";
 
+interface ActionMenuProps {
+    patientId: string;
+    onOpenDetails: (id: string) => void;
+    onSchedule: (id: string) => void;
+    onDelete: (id: string) => void;
+}
+
+function ActionMenu({ patientId, onOpenDetails, onSchedule, onDelete }: ActionMenuProps) {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Abrir menu</span>
+                    <MoreVertical className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onOpenDetails(patientId)}>
+                    <Eye className="w-4 h-4 mr-2" /> Ver detalhes
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link href={`/secretary/pacientes/${patientId}/editar`} className="flex items-center w-full">
+                        <Edit className="w-4 h-4 mr-2" /> Editar
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onSchedule(patientId)}>
+                    <Calendar className="w-4 h-4 mr-2" /> Marcar consulta
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive" onClick={() => onDelete(patientId)}>
+                    <Trash2 className="w-4 h-4 mr-2" /> Excluir
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}
+
 export default function PacientesPage() {
+    const router = useRouter();
     const [searchTerm, setSearchTerm] = useState("");
     const [filters, setFilters] = useState({ convenio: "all", vip: "all" });
     const [allPatients, setAllPatients] = useState<any[]>([]);
@@ -126,32 +164,14 @@ export default function PacientesPage() {
     };
     const visiblePageNumbers = getVisiblePageNumbers(totalPages, page);
 
-    const ActionMenu = ({ patientId }: { patientId: string }) => (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">Abrir menu</span>
-                    <MoreVertical className="h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => openDetailsDialog(patientId)}>
-                    <Eye className="w-4 h-4 mr-2" /> Ver detalhes
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link href={`/secretary/pacientes/${patientId}/editar`} className="flex items-center w-full">
-                        <Edit className="w-4 h-4 mr-2" /> Editar
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                    <Calendar className="w-4 h-4 mr-2" /> Marcar consulta
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive" onClick={() => { setPatientToDelete(patientId); setDeleteDialogOpen(true); }}>
-                    <Trash2 className="w-4 h-4 mr-2" /> Excluir
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-    );
+    const handleSchedule = (patientId: string) => {
+        router.push(`/secretary/schedule?patientId=${patientId}`);
+    };
+
+    const handleDeleteOpen = (patientId: string) => {
+        setPatientToDelete(patientId);
+        setDeleteDialogOpen(true);
+    };
 
     return (
         <Sidebar>
@@ -226,7 +246,12 @@ export default function PacientesPage() {
                                             <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{patient.ultimoAtendimento}</td>
                                             <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{patient.proximoAtendimento}</td>
                                             <td className="px-4 py-3 text-right">
-                                                <ActionMenu patientId={String(patient.id)} />
+                                                <ActionMenu
+                                                    patientId={String(patient.id)}
+                                                    onOpenDetails={openDetailsDialog}
+                                                    onSchedule={handleSchedule}
+                                                    onDelete={handleDeleteOpen}
+                                                />
                                             </td>
                                         </tr>
                                     ))}
@@ -265,7 +290,12 @@ export default function PacientesPage() {
                                             <div className="text-xs text-muted-foreground">{patient.cidade} / {patient.estado}</div>
                                         </div>
                                     </div>
-                                    <ActionMenu patientId={String(patient.id)} />
+                                    <ActionMenu
+                                        patientId={String(patient.id)}
+                                        onOpenDetails={openDetailsDialog}
+                                        onSchedule={handleSchedule}
+                                        onDelete={handleDeleteOpen}
+                                    />
                                 </div>
                             ))}
                         </div>

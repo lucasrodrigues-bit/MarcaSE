@@ -10,5 +10,11 @@ export const patientsService = {
 
     create: (data) => api.post("/rest/v1/patients", data),
     update: (id, data) => api.patch(`/rest/v1/patients?id=eq.${id}`, data),
-    delete: (id) => api.delete(`/rest/v1/patients?id=eq.${id}`),
+
+    delete: async (id) => {
+        // Remove dependentes antes de remover o paciente para evitar violação de FK
+        await api.delete(`/rest/v1/reports?patient_id=eq.${id}`);
+        await api.delete(`/rest/v1/appointments?patient_id=eq.${id}`);
+        return api.delete(`/rest/v1/patients?id=eq.${id}`);
+    },
 };

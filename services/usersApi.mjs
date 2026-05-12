@@ -67,6 +67,12 @@ export const usersService = {
             permissions,
         };
     },
+
+    async delete_user(userId) {
+        await api.delete(`/rest/v1/user_roles?user_id=eq.${userId}`);
+        return await api.delete(`/rest/v1/profiles?id=eq.${userId}`);
+    },
+
     async resetPassword(email) {
         if (!email) throw new Error("Email é obrigatório para resetar a senha.");
 

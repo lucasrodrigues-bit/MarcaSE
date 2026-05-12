@@ -39,7 +39,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-export default function ScheduleForm() {
+interface ScheduleFormProps {
+  initialPatientId?: string;
+}
+
+export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
   // --- ESTADOS ---
   const [role, setRole] = useState<string>("paciente");
   const [userId, setUserId] = useState<string | null>(null);
@@ -96,6 +100,13 @@ export default function ScheduleForm() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (initialPatientId && patients.length > 0) {
+      const exists = patients.some((p) => String(p.id) === String(initialPatientId));
+      if (exists) setSelectedPatient(initialPatientId);
+    }
+  }, [initialPatientId, patients]);
 
   const fetchDoctors = useCallback(async () => {
     setLoadingDoctors(true);
