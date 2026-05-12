@@ -24,6 +24,7 @@ interface Doctor {
   phone_mobile: string | null;
   city: string | null;
   state: string | null;
+  active?: boolean;
   status?: string;
   avatar_url?: string | null;
 }
@@ -88,9 +89,9 @@ export default function DoctorsPage() {
                 for (const p of profilesData) { if (p?.id) profilesById.set(p.id, p); }
             }
 
-            const dataWithStatus = data.map((doc, index) => ({
+            const dataWithStatus = data.map((doc) => ({
                 ...doc,
-                status: index % 3 === 0 ? "Inativo" : index % 2 === 0 ? "Férias" : "Ativo",
+                status: doc.active === false ? "Inativo" : "Ativo",
                 avatar_url: profilesById.get((doc as any).user_id)?.avatar_url ?? null,
             }));
             setDoctors(dataWithStatus || []);
@@ -256,10 +257,10 @@ export default function DoctorsPage() {
                             label: "Especialidade", 
                             options: uniqueSpecialties 
                         },
-                        { 
-                            key: "status", 
-                            label: "Status", 
-                            options: ["Ativo", "Férias", "Inativo"] 
+                        {
+                            key: "status",
+                            label: "Status",
+                            options: ["Ativo", "Inativo"]
                         }
                     ]}
                 >

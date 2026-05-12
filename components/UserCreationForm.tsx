@@ -42,6 +42,7 @@ interface FormData {
   crm: string;
   crm_uf: string;
   specialty: string;
+  active: boolean;
   // paciente + médico
   birth_date: string;
   // paciente – dados pessoais
@@ -99,6 +100,7 @@ const EMPTY_FORM: FormData = {
   crm: "",
   crm_uf: "",
   specialty: "",
+  active: true,
   birth_date: "",
   social_name: "",
   rg: "",
@@ -333,6 +335,7 @@ export default function UserCreationForm({
       if (isDoctor) {
         payload.crm = form.crm.trim();
         payload.crm_uf = form.crm_uf;
+        payload.active = form.active;
         if (form.phone_mobile) payload.phone_mobile = cleanDigits(form.phone_mobile) || null;
         if (form.specialty) payload.specialty = form.specialty.trim();
         if (form.birth_date) payload.birth_date = form.birth_date;
@@ -599,6 +602,17 @@ export default function UserCreationForm({
                     value={form.birth_date}
                     onChange={(e) => set("birth_date", e.target.value)}
                   />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Switch
+                    id="active"
+                    checked={form.active}
+                    onCheckedChange={(v) => set("active", v)}
+                  />
+                  <Label htmlFor="active" className="cursor-pointer">
+                    Médico Ativo
+                  </Label>
                 </div>
               </>
             )}
