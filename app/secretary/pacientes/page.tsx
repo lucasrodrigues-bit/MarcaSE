@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Edit, Trash2, Eye, Calendar, Loader2, MoreVertical } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { patientsService } from "@/services/patientsApi.mjs";
+import { api } from "@/services/api.mjs";
 import Sidebar from "@/components/Sidebar";
 import { FilterBar } from "@/components/ui/filter-bar";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -39,7 +40,16 @@ export default function PacientesPage() {
         setLoading(true);
         setError(null);
         try {
-            const res = await patientsService.list();
+            const [res, profilesData] = await Promise.all([
+                patientsService.list(),
+                api.get("/rest/v1/profiles?select=id,avatar_url"),
+            ]);
+
+            const profilesById = new Map<string, any>();
+            if (Array.isArray(profilesData)) {
+                for (const p of profilesData) { if (p?.id) profilesById.set(p.id, p); }
+            }
+
             const mapped = res.map((p: any) => ({
                 id: String(p.id ?? ""),
                 nome: p.full_name ?? "—",
@@ -50,7 +60,7 @@ export default function PacientesPage() {
                 proximoAtendimento: p.next_appointment_at?.split('T')[0] ?? "—",
                 vip: Boolean(p.vip ?? false),
                 convenio: p.convenio ?? "Particular",
-                avatar_url: p.avatar_url ?? null,
+                avatar_url: profilesById.get(p.id)?.avatar_url ?? null,
             }));
             setAllPatients(mapped);
         } catch (e: any) {

@@ -10,6 +10,7 @@ import { Edit, Trash2, Eye, Calendar, Filter, Loader2, MoreVertical } from "luci
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 import { doctorsService } from "@/services/doctorsApi.mjs";
+import { api } from "@/services/api.mjs";
 import Sidebar from "@/components/Sidebar";
 import { FilterBar } from "@/components/ui/filter-bar";
 import { normalizeSpecialty, getUniqueSpecialties } from "@/lib/normalization";
@@ -77,14 +78,22 @@ export default function DoctorsPage() {
         setLoading(true);
         setError(null);
         try {
-            const data: Doctor[] = await doctorsService.list();
-            // Mockando status para visualização (conforme original)
+            const [data, profilesData] = await Promise.all([
+                doctorsService.list() as Promise<Doctor[]>,
+                api.get("/rest/v1/profiles?select=id,avatar_url"),
+            ]);
+
+            const profilesById = new Map<string, any>();
+            if (Array.isArray(profilesData)) {
+                for (const p of profilesData) { if (p?.id) profilesById.set(p.id, p); }
+            }
+
             const dataWithStatus = data.map((doc, index) => ({
                 ...doc,
                 status: index % 3 === 0 ? "Inativo" : index % 2 === 0 ? "Férias" : "Ativo",
+                avatar_url: profilesById.get((doc as any).user_id)?.avatar_url ?? null,
             }));
             setDoctors(dataWithStatus || []);
-            // Não resetamos a página aqui para manter a navegação fluida se apenas recarregar dados
         } catch (e: any) {
             console.error("Erro ao carregar lista de médicos:", e);
             setError("Não foi possível carregar a lista de médicos. Verifique a conexão com a API.");

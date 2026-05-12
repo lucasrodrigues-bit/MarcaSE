@@ -12,6 +12,7 @@ import { Eye, Edit, Loader2, MoreVertical } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { patientsService } from "@/services/patientsApi.mjs";
+import { api } from "@/services/api.mjs";
 import { PatientDetailsModal } from "@/components/ui/patient-details-modal";
 import Sidebar from "@/components/Sidebar";
 import { FilterBar } from "@/components/ui/filter-bar";
@@ -61,7 +62,15 @@ export default function PacientesPage() {
     try {
       setLoading(true);
       setError(null);
-      const items = await patientsService.list();
+      const [items, profilesData] = await Promise.all([
+        patientsService.list(),
+        api.get("/rest/v1/profiles?select=id,avatar_url"),
+      ]);
+
+      const profilesById = new Map<string, any>();
+      if (Array.isArray(profilesData)) {
+        for (const p of profilesData) { if (p?.id) profilesById.set(p.id, p); }
+      }
 
       const mapped: Paciente[] = (Array.isArray(items) ? items : []).map((p: any) => ({
         id: String(p.id ?? ""),
@@ -83,7 +92,7 @@ export default function PacientesPage() {
         cep: p.cep ?? "—",
         convenio: p.convenio ?? p.insurance_plan ?? "Particular",
         vip: Boolean(p.vip ?? p.is_vip ?? false),
-        avatar_url: p.avatar_url ?? null,
+        avatar_url: profilesById.get(String(p.id))?.avatar_url ?? null,
       }));
 
       setPacientes(mapped);
