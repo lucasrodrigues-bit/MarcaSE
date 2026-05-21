@@ -52,8 +52,8 @@ export default function ReportsPage() {
         } catch (error) {
           console.error("Erro ao buscar laudos:", error)
           toast({
-            title: "Erro ao buscar laudos",
-            description: "Não foi possível carregar os laudos. Tente novamente.",
+            title: "Erro ao carregar laudos",
+            description: "Não foi possível exibir seus laudos. Tente recarregar a página.",
             variant: "destructive",
           })
         } finally {
@@ -79,7 +79,7 @@ export default function ReportsPage() {
     try {
       toast({
         title: "Preparando download...",
-        description: "Gerando PDF do laudo médico",
+        description: "Seu laudo está sendo preparado.",
       })
 
       const htmlContent = report.content_html;
@@ -103,8 +103,8 @@ export default function ReportsPage() {
     } catch (error) {
       console.error("Erro ao baixar laudo:", error)
       toast({
-        title: "Erro no download",
-        description: "Não foi possível baixar o laudo. Tente novamente.",
+        title: "Erro ao baixar laudo",
+        description: "Não foi possível realizar o download. Tente novamente.",
         variant: "destructive",
       })
     }

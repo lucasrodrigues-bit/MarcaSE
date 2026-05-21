@@ -235,9 +235,9 @@ export default function EditarPacientePage() {
             router.push("/manager/pacientes");
         } catch (err: any) {
             console.error("Erro ao atualizar paciente:", err);
-            toast({ 
-                title: "Erro", 
-                description: err?.message || "Não foi possível atualizar o paciente",
+            toast({
+                title: "Erro ao salvar",
+                description: "Não foi possível salvar as alterações. Verifique os dados e tente novamente.",
                 variant: "destructive"
             });
         }

@@ -145,9 +145,8 @@ export default function AvailabilityPage() {
       router.push("#");
     } catch (err: any) {
       toast({
-        title: "Erro",
-        description:
-          err?.message || "Não foi possível editar a disponibilidade",
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as alterações. Tente novamente.",
       });
     } finally {
       setIsLoading(false);
@@ -178,7 +177,7 @@ export default function AvailabilityPage() {
             setDoctorId(did);
 
             if (!did) {
-                toast({ title: "Atenção", description: "Registro de médico não encontrado." });
+                toast({ title: "Atenção", description: "Sua conta não está associada a um médico cadastrado. Entre em contato com o suporte." });
                 setAvailability([]);
                 return;
             }
@@ -186,7 +185,7 @@ export default function AvailabilityPage() {
             const availabilityList = await AvailabilityService.listById(did);
             setAvailability(Array.isArray(availabilityList) ? availabilityList : []);
         } catch (e: any) {
-            toast({ title: "Erro", description: e?.message || "Erro ao carregar dados." });
+            toast({ title: "Erro ao carregar agenda", description: "Não foi possível exibir sua agenda. Tente recarregar a página." });
         }
     };
 
@@ -250,11 +249,11 @@ export default function AvailabilityPage() {
       return;
     }
     if (!doctorId) {
-      toast({ title: "Erro", description: "Registro de médico não encontrado. Recarregue a página." });
+      toast({ title: "Atenção", description: "Sua conta não está associada a um médico cadastrado. Entre em contato com o suporte." });
       return;
     }
     if (!authUserId) {
-      toast({ title: "Erro", description: "Sessão não encontrada. Faça login novamente." });
+      toast({ title: "Sessão expirada", description: "Sua sessão expirou. Faça login novamente.", variant: "destructive" });
       return;
     }
 
@@ -293,8 +292,8 @@ export default function AvailabilityPage() {
             router.push("#"); // adicionar página para listar a disponibilidade
         } catch (err: any) {
             toast({
-                title: "Erro",
-                description: err?.message || "Não foi possível criar a disponibilidade",
+                title: "Erro ao adicionar horário",
+                description: "Não foi possível adicionar o horário. Tente novamente.",
             });
         } finally {
             fetchData()
@@ -331,8 +330,8 @@ export default function AvailabilityPage() {
                 setAvailability((prev: Availability[]) => prev.filter((p) => String(p.id) !== String(AvailabilityId)));
             } catch (e: any) {
                 toast({
-                    title: "Erro",
-                    description: e?.message || "Não foi possível deletar a disponibilidade",
+                    title: "Erro ao remover horário",
+                    description: "Não foi possível remover o horário. Tente novamente.",
                 });
             }
             fetchData()

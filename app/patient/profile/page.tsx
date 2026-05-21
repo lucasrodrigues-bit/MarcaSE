@@ -124,8 +124,8 @@ export default function PatientProfile() {
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
         toast({
-          title: "Erro",
-          description: "Não foi possível carregar seus dados.",
+          title: "Erro ao carregar perfil",
+          description: "Não foi possível exibir seus dados. Tente recarregar a página.",
           variant: "destructive",
         });
       }
@@ -197,8 +197,8 @@ export default function PatientProfile() {
     } catch (error) {
       console.error("Erro no upload:", error);
       toast({
-        title: "Erro de Upload",
-        description: "Não foi possível enviar sua foto.",
+        title: "Erro ao atualizar foto",
+        description: "Não foi possível salvar sua foto de perfil. Tente novamente.",
         variant: "destructive",
       });
     }

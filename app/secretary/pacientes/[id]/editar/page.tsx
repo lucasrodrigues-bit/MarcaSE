@@ -211,7 +211,7 @@ export default function EditarPacientePage() {
                 });
 
             } catch (e: any) {
-                toast({ title: "Erro", description: e?.message || "Falha ao carregar paciente" });
+                toast({ title: "Erro ao carregar paciente", description: "Não foi possível carregar os dados do paciente. Tente recarregar a página." });
             }
         }
         fetchPatient();
@@ -255,8 +255,8 @@ export default function EditarPacientePage() {
         } catch (err: any) {
             console.error("Erro ao atualizar paciente:", err);
             toast({
-                title: "Erro",
-                description: err?.message || "Não foi possível atualizar o paciente",
+                title: "Erro ao salvar",
+                description: "Não foi possível salvar as alterações. Verifique os dados e tente novamente.",
                 variant: "destructive"
             });
         }

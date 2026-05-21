@@ -115,7 +115,7 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
       setDoctors(data || []);
     } catch (err) {
       console.error("Erro ao buscar médicos:", err);
-      toast({ title: "Erro", description: "Não foi possível carregar médicos." });
+      toast({ title: "Erro ao carregar médicos", description: "Não foi possível exibir a lista de médicos. Tente recarregar a página." });
     } finally {
       setLoadingDoctors(false);
     }
@@ -228,7 +228,7 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
       setAvailableTimes(livres);
     } catch (err) {
       console.error(err);
-      toast({ title: "Erro", description: "Falha ao carregar horários." });
+      toast({ title: "Erro ao carregar horários", description: "Não foi possível exibir os horários disponíveis. Tente novamente." });
     } finally {
       setLoadingSlots(false);
     }
@@ -263,11 +263,38 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
         scheduled_at: `${selectedDate}T${selectedTime}:00`,
         duration_minutes: Number(duracao),
         notes,
+        created_by:patientId,
         appointment_type: tipoConsulta,
+        
       };
 
-      await appointmentsService.create(body);
+      console.log("📤 Request body (agendar consulta):", body);
+      const response = await appointmentsService.create(body);
+      console.log("📥 Response body (agendar consulta):", response);
       const dateFormatted = selectedDate.split("-").reverse().join("/");
+
+      // Envia SMS de confirmação ao paciente
+      try {
+        const patientData = isSecretaryLike
+          ? patients.find((p) => p.id === patientId)
+          : (await patientsService.getById(patientId))?.[0];
+
+        const rawPhone = patientData?.phone_mobile || patientData?.phone_number;
+        if (rawPhone) {
+          const digits = rawPhone.replace(/\D/g, "");
+          const phone_number = digits.startsWith("55") ? `+${digits}` : `+55${digits}`;
+          const doctorName = doctors.find((d) => d.id === selectedDoctor)?.full_name || "médico";
+          await smsService.sendSms({
+            phone_number,
+            message: `Consulta confirmada com ${doctorName} em ${dateFormatted} às ${selectedTime}. Lembre-se de comparecer!`,
+            patient_id: patientId,
+          });
+        } else {
+          console.warn("⚠️ [SMS] Paciente sem telefone cadastrado, SMS não enviado.");
+        }
+      } catch (smsErr) {
+        console.error("⚠️ [SMS] Falha ao enviar confirmação:", smsErr);
+      }
 
       toast({
         title: "Consulta agendada!",
@@ -281,7 +308,7 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
       setSelectedPatient("");
     } catch (err) {
       console.error("❌ Erro ao agendar consulta:", err);
-      toast({ title: "Erro", description: "Falha ao agendar consulta." });
+      toast({ title: "Erro ao agendar", description: "Não foi possível realizar o agendamento. Tente novamente." });
     }
   };
 

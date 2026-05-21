@@ -131,7 +131,7 @@ export default function ManagerAvailabilityPage() {
       setDoctors(Array.isArray(doctorList) ? doctorList : []);
       setAvailabilities(Array.isArray(availList) ? availList : []);
     } catch (e: any) {
-      toast({ title: "Erro", description: e?.message || "Falha ao carregar dados." });
+      toast({ title: "Erro ao carregar", description: "Não foi possível exibir as disponibilidades. Tente recarregar a página." });
     } finally {
       setLoading(false);
     }
@@ -188,7 +188,7 @@ export default function ManagerAvailabilityPage() {
     if (addForm.start_time >= addForm.end_time)   { toast({ title: "Atenção", description: "Entrada deve ser anterior à saída." }); return; }
     const slot = Number(addForm.slot_minutes);
     if (!slot || slot < 15 || slot > 120) { toast({ title: "Atenção", description: "Duração entre 15 e 120 minutos." }); return; }
-    if (!authUserId || !managingDoctor) { toast({ title: "Erro", description: "Sessão inválida." }); return; }
+    if (!authUserId || !managingDoctor) { toast({ title: "Sessão expirada", description: "Sua sessão expirou. Faça login novamente.", variant: "destructive" }); return; }
 
     setIsSubmitting(true);
     try {
@@ -207,7 +207,7 @@ export default function ManagerAvailabilityPage() {
       setShowAddForm(false);
       await fetchAll();
     } catch (err: any) {
-      toast({ title: "Erro", description: err?.message || "Não foi possível cadastrar." });
+      toast({ title: "Erro ao adicionar horário", description: "Não foi possível adicionar o horário. Tente novamente." });
     } finally {
       setIsSubmitting(false);
     }
@@ -236,7 +236,7 @@ export default function ManagerAvailabilityPage() {
       toast({ title: "Sucesso", description: "Disponibilidade editada com sucesso." });
       await fetchAll();
     } catch (err: any) {
-      toast({ title: "Erro", description: err?.message || "Não foi possível editar." });
+      toast({ title: "Erro ao salvar", description: "Não foi possível salvar as alterações. Tente novamente." });
     } finally {
       setIsEditOpen(false);
       setEditTarget(null);
@@ -256,7 +256,7 @@ export default function ManagerAvailabilityPage() {
       toast({ title: "Sucesso", description: "Disponibilidade excluída com sucesso." });
       setAvailabilities((prev) => prev.filter((a) => a.id !== deleteTarget.id));
     } catch (e: any) {
-      toast({ title: "Erro", description: e?.message || "Não foi possível excluir." });
+      toast({ title: "Erro ao remover", description: "Não foi possível remover o horário. Tente novamente." });
     } finally {
       setIsDeleteOpen(false);
       setDeleteTarget(null);

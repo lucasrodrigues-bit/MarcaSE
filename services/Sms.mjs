@@ -1,50 +1,50 @@
 const BASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const API_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
 export const smsService = {
   /**
    * Envia um SMS de lembrete via Twilio
    * @param {Object} params
    * @param {string} params.phone_number - Ex: +5511999999999
-   * @param {string} params.message - Mensagem de texto
-   * @param {string} [params.patient_id] - ID opcional do paciente
+   * @param {string} params.message - Mensagem de texto (1-1000 chars)
+   * @param {string} [params.patient_id] - UUID opcional do paciente
    */
   async sendSms({ phone_number, message, patient_id }) {
     try {
-      // 🔹 Busca o token salvo pelo login
       const token = localStorage.getItem("token");
 
       if (!token) {
-        console.error("❌ Nenhum token JWT encontrado no localStorage (chave: 'token').");
+        console.error("❌ [smsService] Nenhum token JWT encontrado.");
         return { success: false, error: "Token JWT não encontrado." };
       }
 
-      const body = JSON.stringify({
-        phone_number,
-        message,
-        patient_id,
-      });
+      const body = JSON.stringify({ phone_number, message, patient_id });
 
-      console.log("[smsService] Enviando SMS para:", phone_number);
+      console.log("📤 [smsService] Request body:", { phone_number, message, patient_id });
 
-      const response = await fetch(BASE_URL, {
+      const response = await fetch(`${BASE_URL}/functions/v1/send-sms`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // 🔑 autenticação Supabase
+          Authorization: `Bearer ${token}`,
+          apikey: API_KEY,
         },
         body,
       });
 
-      const result = await response.json();
+      const result = await response.json().catch(() => null);
+
+      console.log("📥 [smsService] Response status:", response.status, "| Body:", result);
 
       if (!response.ok) {
-        console.error("❌ Falha no envio do SMS:", result);
+        console.error("❌ [smsService] Falha no envio:", result);
         return { success: false, error: result };
       }
 
-      console.log("✅ SMS enviado com sucesso:", result);
+      console.log("✅ [smsService] SMS enviado com sucesso:", result);
       return result;
     } catch (err) {
-      console.error("❌ Erro inesperado ao enviar SMS:", err);
+      console.error("❌ [smsService] Erro inesperado:", err);
       return { success: false, error: err.message };
     }
   },
