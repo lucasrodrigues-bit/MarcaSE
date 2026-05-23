@@ -36,7 +36,9 @@ export const reportsApi = {
   },
   createReport: async (reportData) => {
     try {
-      const data = await api.post(REPORTS_API_URL, reportData);
+      const data = await api.post(REPORTS_API_URL, reportData, {
+        headers: { Prefer: 'return=representation' },
+      });
       return data;
     } catch (error) {
       console.error("Failed to create report:", error);
@@ -49,6 +51,18 @@ export const reportsApi = {
       return data;
     } catch (error) {
       console.error(`Failed to update report ${reportId}:`, error);
+      throw error;
+    }
+  },
+  sendToPatient: async (reportId, patientId) => {
+    try {
+      const data = await api.patch(`${REPORTS_API_URL}?id=eq.${reportId}`, {
+        patient_id: patientId,
+        status: 'completed',
+      });
+      return data;
+    } catch (error) {
+      console.error(`Failed to send report ${reportId} to patient:`, error);
       throw error;
     }
   },

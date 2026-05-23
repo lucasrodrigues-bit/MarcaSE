@@ -55,7 +55,7 @@ export default function PatientRegister() {
       const payload = {
         email: formData.email.trim().toLowerCase(),
         full_name: formData.name,
-        phone_mobile: formData.phone, // O endpoint espera 'phone_mobile'
+        phone_mobile: formData.phone.replace(/\D/g, ''),
         cpf: formData.cpf.replace(/\D/g, ''),
         birth_date: formData.birthDate,
       }

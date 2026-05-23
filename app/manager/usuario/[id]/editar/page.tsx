@@ -16,6 +16,7 @@ interface UserFormData {
   email: string
   telefone: string
   papel: string
+  departamento: string
 }
 
 const defaultFormData: UserFormData = {
@@ -23,6 +24,7 @@ const defaultFormData: UserFormData = {
   email: "",
   telefone: "",
   papel: "",
+  departamento: "",
 }
 
 const cleanNumber = (value: string): string => value.replace(/\D/g, "")
@@ -52,11 +54,25 @@ export default function EditarUsuarioPage() {
     const fetchUser = async () => {
       try {
         const data = await usersService.full_data(id)
+        const role = data.roles[0] ?? ""
+        let departamento = ""
+        if (role === "secretaria") {
+          try {
+            const [sec] = await (await import("@/services/api.mjs")).api.get(`/rest/v1/secretaries?user_id=eq.${id}&select=department`)
+            departamento = sec?.department ?? ""
+          } catch (_) {}
+        } else if (role === "gestor") {
+          try {
+            const [mgr] = await (await import("@/services/api.mjs")).api.get(`/rest/v1/managers?user_id=eq.${id}&select=department`)
+            departamento = mgr?.department ?? ""
+          } catch (_) {}
+        }
         setFormData({
           nomeCompleto: data.profile.full_name ?? "",
           email: data.profile.email ?? "",
           telefone: data.profile.phone ?? "",
-          papel: data.roles[0] ?? "",
+          papel: role,
+          departamento,
         })
       } catch (e: any) {
         setError(e.message || "Não foi possível carregar os dados do usuário.")
@@ -90,6 +106,7 @@ export default function EditarUsuarioPage() {
         email: formData.email,
         phone: formData.telefone.trim() || null,
         role: formData.papel,
+        department: formData.departamento.trim() || undefined,
       })
       router.push("/manager/usuario")
     } catch (e: any) {
@@ -225,6 +242,19 @@ export default function EditarUsuarioPage() {
                 </Select>
               </div>
             </div>
+
+            {(formData.papel === "gestor" || formData.papel === "secretaria") && (
+              <div className="space-y-2">
+                <Label htmlFor="departamento">Departamento *</Label>
+                <Input
+                  id="departamento"
+                  value={formData.departamento}
+                  onChange={(e) => handleInputChange("departamento", e.target.value)}
+                  placeholder="Ex: Administrativo, Recepção..."
+                  maxLength={100}
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-4 pt-4">

@@ -53,6 +53,10 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
   const [selectedPatient, setSelectedPatient] = useState("");
   const [openPatientCombobox, setOpenPatientCombobox] = useState(false);
 
+  // Estados de Especialidade
+  const [selectedSpecialty, setSelectedSpecialty] = useState("");
+  const [openSpecialtyCombobox, setOpenSpecialtyCombobox] = useState(false);
+
   // Estados de Médico
   const [doctors, setDoctors] = useState<any[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState("");
@@ -143,7 +147,6 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
       const start = format(today, "yyyy-MM-dd");
       const endDate = addDays(today, 90);
       const end = format(endDate, "yyyy-MM-dd");
-
       const appointments = await appointmentsService.search_appointment(
         `doctor_id=eq.${doctorId}&scheduled_at=gte.${start}T00:00:00Z&scheduled_at=lt.${end}T23:59:59Z`
       );
@@ -182,6 +185,10 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
       setAvailabilityCounts({});
     }
   };
+
+  useEffect(() => {
+    setSelectedDoctor("");
+  }, [selectedSpecialty]);
 
   useEffect(() => {
     if (selectedDoctor) {
@@ -429,72 +436,139 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
                     </div>
                   )}
 
-                  {/* COMBOBOX DE MÉDICO */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Selecione o Médico</Label>
-                    
-                    <Popover open={openDoctorCombobox} onOpenChange={setOpenDoctorCombobox}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openDoctorCombobox}
-                          className="w-full justify-between"
-                          disabled={loadingDoctors}
-                        >
-                          {loadingDoctors ? "Carregando..." : (
-                            selectedDoctor
-                            ? doctors.find((doctor) => doctor.id === selectedDoctor)?.full_name
-                            : "Buscar médico..."
-                          )}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
+                  {/* ESPECIALIDADE + MÉDICO LADO A LADO */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                      {/* AQUI: Configurações de largura e posicionamento corrigidos */}
-                      <PopoverContent 
-                        className="w-[--radix-popover-trigger-width] min-w-0 p-0" 
-                        align="start"
-                        side="bottom"
-                      >
-                        <Command>
-                          <CommandInput placeholder="Procurar médico..." />
-                          
-                          {/* AQUI: Altura reduzida no mobile */}
-                          <CommandList className="max-h-[130px] md:max-h-[300px] overflow-y-auto">
-                            <CommandEmpty>Nenhum médico encontrado.</CommandEmpty>
-                            <CommandGroup>
-                              {doctors.map((doctor) => (
-                                <CommandItem
-                                  key={doctor.id}
-                                  value={doctor.full_name}
-                                  onSelect={() => {
-                                    setSelectedDoctor(doctor.id === selectedDoctor ? "" : doctor.id);
-                                    setOpenDoctorCombobox(false);
-                                  }}
-                                  className="text-xs md:text-sm py-1.5 md:py-2"
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-3 w-3 md:h-4 md:w-4",
-                                      selectedDoctor === doctor.id ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  <div className="flex flex-col truncate">
-                                    <span className="truncate font-medium">{doctor.full_name}</span>
-                                    <span className="text-[10px] md:text-xs text-muted-foreground truncate">{doctor.specialty}</span>
-                                  </div>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    {/* COMBOBOX DE ESPECIALIDADE */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Especialidade</Label>
+                      <Popover open={openSpecialtyCombobox} onOpenChange={setOpenSpecialtyCombobox}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openSpecialtyCombobox}
+                            className="w-full justify-between"
+                            disabled={loadingDoctors}
+                          >
+                            <span className="truncate">
+                              {loadingDoctors ? "Carregando..." : (selectedSpecialty || "Filtrar por especialidade...")}
+                            </span>
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] min-w-0 p-0" align="start" side="bottom">
+                          <Command>
+                            <CommandInput placeholder="Buscar especialidade..." />
+                            <CommandList className="max-h-[200px] overflow-y-auto">
+                              <CommandEmpty>Nenhuma especialidade encontrada.</CommandEmpty>
+                              <CommandGroup>
+                                {selectedSpecialty && (
+                                  <CommandItem
+                                    value="__all__"
+                                    onSelect={() => {
+                                      setSelectedSpecialty("");
+                                      setOpenSpecialtyCombobox(false);
+                                    }}
+                                    className="text-xs md:text-sm py-1.5 md:py-2 text-muted-foreground italic"
+                                  >
+                                    <Check className="mr-2 h-3 w-3 opacity-0" />
+                                    Todas as especialidades
+                                  </CommandItem>
+                                )}
+                                {Array.from(new Set(doctors.map((d) => d.specialty).filter(Boolean))).sort().map((spec) => (
+                                  <CommandItem
+                                    key={spec as string}
+                                    value={spec as string}
+                                    onSelect={() => {
+                                      setSelectedSpecialty(spec === selectedSpecialty ? "" : spec as string);
+                                      setOpenSpecialtyCombobox(false);
+                                    }}
+                                    className="text-xs md:text-sm py-1.5 md:py-2"
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-3 w-3 md:h-4 md:w-4",
+                                        selectedSpecialty === spec ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    <span className="truncate">{spec as string}</span>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <p className="text-xs text-muted-foreground">
+                        Filtra médicos por área.
+                      </p>
+                    </div>
 
-                    <p className="text-xs text-muted-foreground mt-1">
+                    {/* COMBOBOX DE MÉDICO */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Médico</Label>
+                      <Popover open={openDoctorCombobox} onOpenChange={setOpenDoctorCombobox}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openDoctorCombobox}
+                            className="w-full justify-between"
+                            disabled={loadingDoctors}
+                          >
+                            <span className="truncate">
+                              {loadingDoctors ? "Carregando..." : (
+                                selectedDoctor
+                                  ? doctors.find((d) => d.id === selectedDoctor)?.full_name
+                                  : "Buscar médico..."
+                              )}
+                            </span>
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] min-w-0 p-0" align="start" side="bottom">
+                          <Command>
+                            <CommandInput placeholder="Procurar médico..." />
+                            <CommandList className="max-h-[200px] overflow-y-auto">
+                              <CommandEmpty>Nenhum médico encontrado.</CommandEmpty>
+                              <CommandGroup>
+                                {doctors
+                                  .filter((d) => !selectedSpecialty || d.specialty === selectedSpecialty)
+                                  .map((doctor) => (
+                                    <CommandItem
+                                      key={doctor.id}
+                                      value={doctor.full_name}
+                                      onSelect={() => {
+                                        setSelectedDoctor(doctor.id === selectedDoctor ? "" : doctor.id);
+                                        setOpenDoctorCombobox(false);
+                                      }}
+                                      className="text-xs md:text-sm py-1.5 md:py-2"
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-3 w-3 md:h-4 md:w-4",
+                                          selectedDoctor === doctor.id ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      <div className="flex flex-col truncate">
+                                        <span className="truncate font-medium">{doctor.full_name}</span>
+                                        {!selectedSpecialty && (
+                                          <span className="text-[10px] md:text-xs text-muted-foreground truncate">{doctor.specialty}</span>
+                                        )}
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <p className="text-xs text-muted-foreground">
                         Digite para filtrar por nome.
-                    </p>
+                      </p>
+                    </div>
+
                   </div>
                 </CardContent>
               </Card>

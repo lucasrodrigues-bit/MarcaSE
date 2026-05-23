@@ -68,12 +68,21 @@ export const usersService = {
         };
     },
 
-    async update_user(userId, { full_name, email, phone, role }) {
+    async update_user(userId, { full_name, email, phone, role, department }) {
         await api.patch(`/rest/v1/profiles?id=eq.${userId}`, { full_name, email, phone });
         await api.patch(`/rest/v1/user_roles?user_id=eq.${userId}`, { role });
+        if (role === "secretaria" && department !== undefined) {
+            await api.patch(`/rest/v1/secretaries?user_id=eq.${userId}`, { department });
+        }
+        if (role === "gestor" && department !== undefined) {
+            await api.patch(`/rest/v1/managers?user_id=eq.${userId}`, { department });
+        }
     },
 
     async delete_user(userId) {
+        // tenta limpar tabelas operacionais antes de remover perfil (ignora se não existir)
+        try { await api.delete(`/rest/v1/secretaries?user_id=eq.${userId}`); } catch (_) {}
+        try { await api.delete(`/rest/v1/managers?user_id=eq.${userId}`); } catch (_) {}
         await api.delete(`/rest/v1/user_roles?user_id=eq.${userId}`);
         return await api.delete(`/rest/v1/profiles?id=eq.${userId}`);
     },
