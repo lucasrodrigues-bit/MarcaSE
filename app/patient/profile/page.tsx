@@ -340,7 +340,7 @@ export default function PatientProfile() {
                     placeholder="seu@email.com"
                   />
                   <p className="text-[10px] text-muted-foreground/60">
-                    Atualiza o email de contato cadastral. O email de acesso ao sistema não é alterado aqui.
+                    Atualiza o email de contato manager/medicostral. O email de acesso ao sistema não é alterado aqui.
                   </p>
                 </div>
                 <div className="space-y-1.5">

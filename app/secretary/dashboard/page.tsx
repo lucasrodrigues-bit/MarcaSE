@@ -261,14 +261,14 @@ export default function SecretaryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Pacientes</CardTitle>
-              <CardDescription>Últimos pacientes cadastrados</CardDescription>
+              <CardDescription>Últimos pacientes manager/medicostrados</CardDescription>
             </CardHeader>
             <CardContent>
               {loadingPatients ? (
                 <p className="text-sm text-muted-foreground">Carregando pacientes...</p>
               ) : patients.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Nenhum paciente cadastrado.
+                  Nenhum paciente manager/medicostrado.
                 </p>
               ) : (
                 <div className="space-y-4">

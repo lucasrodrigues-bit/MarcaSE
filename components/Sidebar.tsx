@@ -336,7 +336,7 @@ export default function Sidebar({ children }: SidebarProps) {
         description: "Pacientes",
       },
       {
-        href: "/manager/home",
+        href: "/manager/medicos",
         icon: Stethoscope,
         label: "Gestão de Médicos",
         description: "Médicos",
@@ -363,7 +363,7 @@ export default function Sidebar({ children }: SidebarProps) {
         description: "Usuários",
       },
       {
-        href: "/manager/home",
+        href: "/manager/medicos",
         icon: Stethoscope,
         label: "Gestão de Médicos",
         description: "Médicos",

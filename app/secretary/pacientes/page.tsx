@@ -178,7 +178,7 @@ export default function PacientesPage() {
             <div className="space-y-6 px-2 sm:px-4 md:px-6 pb-20">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div>
-                        <h1 className="text-2xl font-bold">Pacientes Cadastrados</h1>
+                        <h1 className="text-2xl font-bold">Pacientes manager/medicostrados</h1>
                         <p className="text-sm text-muted-foreground">Gerencie as informações de seus pacientes</p>
                     </div>
                     <Link href="/secretary/pacientes/novo" className="w-full sm:w-auto">
@@ -212,7 +212,7 @@ export default function PacientesPage() {
                         <div className="p-8 text-center text-destructive">{error}</div>
                     ) : filteredPatients.length === 0 ? (
                         <div className="p-8 text-center text-muted-foreground">
-                            {allPatients.length === 0 ? "Nenhum paciente cadastrado." : "Nenhum paciente encontrado com os filtros aplicados."}
+                            {allPatients.length === 0 ? "Nenhum paciente manager/medicostrado." : "Nenhum paciente encontrado com os filtros aplicados."}
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
@@ -272,7 +272,7 @@ export default function PacientesPage() {
                         <div className="p-8 text-center text-destructive">{error}</div>
                     ) : filteredPatients.length === 0 ? (
                         <div className="p-8 text-center text-muted-foreground">
-                            {allPatients.length === 0 ? "Nenhum paciente cadastrado." : "Nenhum paciente encontrado com os filtros aplicados."}
+                            {allPatients.length === 0 ? "Nenhum paciente manager/medicostrado." : "Nenhum paciente encontrado com os filtros aplicados."}
                         </div>
                     ) : (
                         <div className="space-y-4">

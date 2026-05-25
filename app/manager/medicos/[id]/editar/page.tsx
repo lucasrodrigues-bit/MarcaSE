@@ -187,7 +187,7 @@ export default function EditarMedicoPage() {
         delete finalPayload.user_id;
         try {
             await doctorsService.update(id, finalPayload);
-            router.push("/manager/home");
+            router.push("/manager/medicos");
         } catch (e: any) {
             console.error("Erro ao salvar o médico:", e);
             let detailedError = "Erro ao atualizar. Verifique os dados e tente novamente.";
@@ -228,7 +228,7 @@ export default function EditarMedicoPage() {
                             Atualize as informações do médico
                         </p>
                     </div>
-                    <Link href="/manager/home">
+                    <Link href="/manager/medicos">
                         <Button variant="outline">
                             <ArrowLeft className="w-4 h-4 mr-2" />
                             Voltar
@@ -467,7 +467,7 @@ export default function EditarMedicoPage() {
 
 
                     <div className="flex justify-end gap-4 pb-8 pt-4">
-                        <Link href="/manager/home">
+                        <Link href="/manager/medicos">
                             <Button type="button" variant="outline" disabled={isSaving}>
                                 Cancelar
                             </Button>

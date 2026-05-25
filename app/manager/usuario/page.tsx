@@ -196,7 +196,7 @@ export default function UsersPage() {
             <div className="space-y-6 px-2 sm:px-4 md:px-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div>
-                        <h1 className="text-2xl font-bold">Usuários Cadastrados</h1>
+                        <h1 className="text-2xl font-bold">Usuários manager/medicostrados</h1>
                         <p className="text-sm text-muted-foreground">Gerencie usuários do sistema.</p>
                     </div>
                     <Link href="/manager/usuario/novo" className="w-full sm:w-auto">

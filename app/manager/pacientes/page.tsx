@@ -217,7 +217,7 @@ export default function PacientesPage() {
                         <div className="p-8 text-center text-destructive">{error}</div>
                     ) : filteredPatients.length === 0 ? (
                         <div className="p-8 text-center text-muted-foreground">
-                            {allPatients.length === 0 ? "Nenhum paciente cadastrado." : "Nenhum paciente encontrado com os filtros aplicados."}
+                            {allPatients.length === 0 ? "Nenhum paciente manager/medicostrado." : "Nenhum paciente encontrado com os filtros aplicados."}
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
@@ -277,7 +277,7 @@ export default function PacientesPage() {
                         <div className="p-8 text-center text-destructive">{error}</div>
                     ) : filteredPatients.length === 0 ? (
                         <div className="p-8 text-center text-muted-foreground">
-                            {allPatients.length === 0 ? "Nenhum paciente cadastrado." : "Nenhum paciente encontrado com os filtros aplicados."}
+                            {allPatients.length === 0 ? "Nenhum paciente manager/medicostrado." : "Nenhum paciente encontrado com os filtros aplicados."}
                         </div>
                     ) : (
                         <div className="space-y-4">

@@ -745,7 +745,7 @@ export default function ManagerDashboard() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[
                 {
-                  href: "/manager/home",
+                  href: "/manager/medicos",
                   label: "Gestão de Médicos",
                   icon: Stethoscope,
                   color: "text-blue-400",
@@ -1075,7 +1075,7 @@ export default function ManagerDashboard() {
                     {doctors.length} no total
                   </CardDescription>
                 </div>
-                <Link href="/manager/home">
+                <Link href="/manager/medicos">
                   <Button
                     size="sm"
                     variant="outline"
