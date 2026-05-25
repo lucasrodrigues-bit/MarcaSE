@@ -419,11 +419,10 @@ export default function ManagerDashboard() {
     const cancelled = appointments.filter((a) => a.status === "cancelled");
     const completed = appointments.filter((a) => a.status === "completed");
     const confirmed = appointments.filter((a) => a.status === "confirmed");
+    const absentCount = cancelled.length + noShow.length;
     const noShowRate =
-      confirmed.length > 0
-        ? Math.round(
-            ((confirmed.length - completed.length) / confirmed.length) * 100,
-          )
+      appointments.length > 0
+        ? Math.round((absentCount / appointments.length) * 100)
         : 0;
 
     return {
@@ -712,8 +711,8 @@ export default function ManagerDashboard() {
                               name,
                             ]}
                             contentStyle={{
-                              background: "#0f172a",
-                              border: "1px solid #1e293b",
+                              background: "#ffffff",
+                              border: "1px solid #fefeff",
                               borderRadius: 8,
                               fontSize: 12,
                             }}

@@ -11,6 +11,13 @@ import { reportsApi } from '@/services/reportsApi.mjs';
 import Sidebar from '@/components/Sidebar';
 import { Badge } from '@/components/ui/badge';
 
+const formatPhone = (v: string) => {
+  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
+  if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  return d;
+};
+
 export default function LaudosPage() {
     const [patient, setPatient] = useState(null);
     const [laudos, setLaudos] = useState([]);
@@ -64,7 +71,7 @@ export default function LaudosPage() {
                                 <CardContent>
                                     <p><strong>Nome:</strong> {patient.full_name}</p>
                                     <p><strong>Email:</strong> {patient.email}</p>
-                                    <p><strong>Telefone:</strong> {patient.phone_mobile}</p>
+                                    <p><strong>Telefone:</strong> {formatPhone((patient as any).phone_mobile ?? "")}</p>
                                 </CardContent>
                             </Card>
                         )}
@@ -96,7 +103,7 @@ export default function LaudosPage() {
                                                     <TableCell>{laudo.diagnosis}</TableCell>
                                                     <TableCell>
                                                         {laudo.status === 'draft' && <Badge variant="secondary">Rascunho</Badge>}
-                                                        {laudo.status === 'completed' && <Badge className="bg-green-600 text-white">Entregue</Badge>}
+                                                        {laudo.status === 'completed' && <Badge className="bg-green-600 text-white">Confirmado</Badge>}
                                                     </TableCell>
                                                     <TableCell>{new Date(laudo.created_at).toLocaleDateString()}</TableCell>
                                                     <TableCell>

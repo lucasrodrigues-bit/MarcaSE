@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Save, Loader2 } from "lucide-react";
 import { usersService } from "@/services/usersApi.mjs";
+import { doctorsService } from "@/services/doctorsApi.mjs";
 import { isValidCPF } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -322,6 +323,23 @@ export default function UserCreationForm({
     }
     if (isDoctor && (!form.crm || !form.crm_uf)) {
       setError("Para médico, CRM e UF do CRM são obrigatórios."); return;
+    }
+    if (isDoctor) {
+      try {
+        const existingDoctors: any[] = await doctorsService.list();
+        const crmTrimmed = form.crm.trim().toUpperCase();
+        const ufTrimmed = form.crm_uf.trim().toUpperCase();
+        const duplicate = existingDoctors.some(
+          (d) => d.crm?.trim().toUpperCase() === crmTrimmed &&
+                 d.crm_uf?.trim().toUpperCase() === ufTrimmed
+        );
+        if (duplicate) {
+          setError(`Já existe um médico cadastrado com o CRM ${crmTrimmed}/${ufTrimmed}.`);
+          return;
+        }
+      } catch {
+        // se a checagem falhar, deixa o backend decidir
+      }
     }
     if (isPatient && !form.phone_mobile) {
       setError("Para paciente, o celular é obrigatório."); return;

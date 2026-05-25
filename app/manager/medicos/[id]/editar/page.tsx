@@ -186,6 +186,20 @@ export default function EditarMedicoPage() {
 
         delete finalPayload.user_id;
         try {
+            if (formData.crm && formData.crmEstado) {
+                const allDoctors: any[] = await doctorsService.list();
+                const crmTrimmed = formData.crm.trim().toUpperCase();
+                const ufTrimmed = formData.crmEstado.trim().toUpperCase();
+                const duplicate = allDoctors.some(
+                    (d) => String(d.id) !== String(id) &&
+                           d.crm?.trim().toUpperCase() === crmTrimmed &&
+                           d.crm_uf?.trim().toUpperCase() === ufTrimmed
+                );
+                if (duplicate) {
+                    setError(`Já existe outro médico com o CRM ${crmTrimmed}/${ufTrimmed}.`);
+                    return;
+                }
+            }
             await doctorsService.update(id, finalPayload);
             router.push("/manager/medicos");
         } catch (e: any) {

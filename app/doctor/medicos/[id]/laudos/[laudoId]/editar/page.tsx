@@ -114,7 +114,7 @@ export default function EditarLaudoPage() {
         clearTimeout(autoSaveTimer.current);
         setIsSubmitting(true);
         try {
-            const { id, patient_id, created_at, updated_at, created_by, updated_by, ...updateData } = formData;
+            const { id, order_number, created_at, updated_at, created_by, updated_by, ...updateData } = formData;
             await reportsApi.updateReport(laudoId, {
                 ...updateData,
                 due_at: formData.due_at instanceof Date ? formData.due_at.toISOString() : formData.due_at,
@@ -133,7 +133,7 @@ export default function EditarLaudoPage() {
         setIsSending(true);
         try {
             await reportsApi.sendToPatient(laudoId, formData.patient_id);
-            setFormData((prev: any) => ({ ...prev, status: "entregue" }));
+            setFormData((prev: any) => ({ ...prev, status: "completed" }));
             toast({ title: "Laudo enviado ao paciente com sucesso!" });
         } catch {
             toast({ title: "Erro ao enviar laudo", variant: "destructive" });
@@ -144,7 +144,7 @@ export default function EditarLaudoPage() {
 
     const statusBadge = {
         draft: <Badge variant="secondary">Rascunho</Badge>,
-        completed: <Badge className="bg-green-600 text-white">Entregue</Badge>,
+        completed: <Badge className="bg-green-600 text-white">Confirmado</Badge>,
     }[formData.status as string] ?? null;
 
     if (loading) {
@@ -224,6 +224,7 @@ export default function EditarLaudoPage() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="draft">Rascunho</SelectItem>
+                                            <SelectItem value="completed">Confirmado</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -305,7 +306,7 @@ export default function EditarLaudoPage() {
                                         </AlertDialogContent>
                                     </AlertDialog>
                                 ) : (
-                                    <p className="text-sm text-muted-foreground">Este laudo já foi entregue ao paciente.</p>
+                                    <p className="text-sm text-muted-foreground">Este laudo já foi confirmado e está visível para o paciente.</p>
                                 )}
 
                                 <div className="flex space-x-2">

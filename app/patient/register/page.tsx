@@ -13,6 +13,21 @@ import { useToast } from "@/hooks/use-toast"
 import { usersService } from "@/services/usersApi.mjs" // Mantém a importação
 import { isValidCPF } from "@/lib/utils"
 
+const formatPhone = (v: string) => {
+  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
+  if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  return d;
+};
+
+const formatCPF = (v: string) => {
+  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
+  if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+  if (d.length > 6) return d.replace(/(\d{3})(\d{3})(\d+)/, "$1.$2.$3");
+  if (d.length > 3) return d.replace(/(\d{3})(\d+)/, "$1.$2");
+  return d;
+};
+
 export default function PatientRegister() {
   // REMOVIDO: Estados para 'showPassword' e 'showConfirmPassword'
   const [formData, setFormData] = useState({
@@ -28,9 +43,12 @@ export default function PatientRegister() {
   const { toast } = useToast()
 
   const handleInputChange = (field: string, value: string) => {
+    let v = value;
+    if (field === "phone") v = formatPhone(value);
+    else if (field === "cpf") v = formatCPF(value);
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: v,
     }))
   }
 
@@ -65,7 +83,7 @@ export default function PatientRegister() {
 
       // ALTERADO: Mensagem de sucesso para refletir o fluxo de confirmação por e-mail
       toast({
-        title: "manager/medicostro enviado com sucesso!",
+        title: "Cadastro enviado com sucesso!",
         description: "Enviamos um link de confirmação para o seu e-mail. Por favor, verifique sua caixa de entrada para ativar sua conta.",
       })
 

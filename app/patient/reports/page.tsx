@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -188,7 +188,7 @@ export default function ReportsPage() {
                         </CardDescription>
                       </div>
                       <Badge variant="secondary" className="bg-green-100 text-green-800">
-                        Finalizado
+                        Confirmado
                       </Badge>
                     </div>
                   </CardHeader>
@@ -243,7 +243,7 @@ export default function ReportsPage() {
                         </CardDescription>
                       </div>
                       <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                        {report.status}
+                        Pendente
                       </Badge>
                     </div>
                   </CardHeader>

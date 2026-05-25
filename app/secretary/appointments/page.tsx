@@ -52,6 +52,13 @@ import { patientsService } from "@/services/patientsApi.mjs";
 import { doctorsService } from "@/services/doctorsApi.mjs";
 import Sidebar from "@/components/Sidebar";
 
+const formatPhone = (v: string) => {
+  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
+  if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  return d;
+};
+
 export default function SecretaryAppointments() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -439,7 +446,7 @@ export default function SecretaryAppointments() {
                                 </div>
                                 <div className="flex items-center text-sm text-muted-foreground">
                                   <Phone className="mr-2 h-4 w-4" />
-                                  {appointment.doctor.phone || "N/A"}
+                                  {formatPhone(appointment.doctor.phone ?? "") || "N/A"}
                                 </div>
                                 <div>{getStatusBadge(appointment.status)}</div>
                               </div>

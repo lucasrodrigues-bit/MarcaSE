@@ -30,6 +30,13 @@ interface EnrichedAppointment {
   location: string;
 }
 
+const formatPhone = (v: string) => {
+  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
+  if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  return d || v;
+};
+
 export default function DoctorAppointmentsPage() {
   const { user, isLoading: isAuthLoading } = useAuthLayout({ requiredRole: "medico" });
   
@@ -60,7 +67,7 @@ export default function DoctorAppointmentsPage() {
       const enrichedAppointments = appointmentsList.map((apt: any) => ({
         id: apt.id,
         patientName: patientsMap.get(apt.patient_id)?.name || "Paciente Desconhecido",
-        patientPhone: patientsMap.get(apt.patient_id)?.phone || "N/A",
+        patientPhone: formatPhone(patientsMap.get(apt.patient_id)?.phone || ""),
         scheduled_at: apt.scheduled_at,
         status: apt.status,
         location: "Consultório Principal",
@@ -116,7 +123,7 @@ export default function DoctorAppointmentsPage() {
       completed: "Concluída",
       cancelled: "Cancelada",
       requested: "Solicitada",
-      no_show: "oculta",
+      no_show: "Não Compareceu",
       checked_in: "Aguardando",
   };
 

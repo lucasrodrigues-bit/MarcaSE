@@ -15,6 +15,13 @@ import { patientsService } from "@/services/patientsApi.mjs";
 import { appointmentsService } from "@/services/appointmentsApi.mjs";
 import Sidebar from "@/components/Sidebar";
 
+const formatPhone = (v: string) => {
+  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
+  if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  return d;
+};
+
 export default function SecretaryDashboard() {
   // Estados
   const [patients, setPatients] = useState<any[]>([]);
@@ -282,9 +289,7 @@ export default function SecretaryDashboard() {
                           {patient.full_name || "Sem nome"}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {patient.phone_mobile ||
-                            patient.phone1 ||
-                            "Sem telefone"}
+                          {formatPhone(patient.phone_mobile || patient.phone1 || "") || "Sem telefone"}
                         </p>
                       </div>
                       <div className="text-right">

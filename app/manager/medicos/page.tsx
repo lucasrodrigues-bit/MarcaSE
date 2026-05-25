@@ -49,6 +49,13 @@ interface DoctorDetails {
   error?: string;
 }
 
+const formatPhone = (v: string) => {
+  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
+  if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  return d;
+};
+
 export default function DoctorsPage() {
   const router = useRouter();
 
@@ -94,7 +101,13 @@ export default function DoctorsPage() {
                 status: doc.active === false ? "Inativo" : "Ativo",
                 avatar_url: profilesById.get((doc as any).user_id)?.avatar_url ?? null,
             }));
-            setDoctors(dataWithStatus || []);
+            const seen = new Set<number>();
+            const uniqueData = dataWithStatus.filter((doc) => {
+                if (seen.has(doc.id)) return false;
+                seen.add(doc.id);
+                return true;
+            });
+            setDoctors(uniqueData);
         } catch (e: any) {
             console.error("Erro ao carregar lista de médicos:", e);
             setError("Não foi possível carregar a lista de médicos. Verifique a conexão com a API.");
@@ -197,7 +210,7 @@ export default function DoctorsPage() {
             nome: doctor.full_name,
             crm: doctor.crm,
             especialidade: normalizeSpecialty(doctor.specialty), // Exibe normalizado
-            contato: { celular: doctor.phone_mobile ?? undefined },
+            contato: { celular: doctor.phone_mobile ? formatPhone(doctor.phone_mobile) : undefined },
             endereco: { cidade: doctor.city ?? undefined, estado: doctor.state ?? undefined },
             status: doctor.status || "Ativo",
             convenio: "Particular",
@@ -397,7 +410,7 @@ export default function DoctorsPage() {
                                         <UserAvatar name={doctor.full_name} avatarUrl={doctor.avatar_url} />
                                         <div>
                                             <div className="font-semibold">{doctor.full_name}</div>
-                                            <div className="text-xs text-muted-foreground mb-1">{doctor.phone_mobile}</div>
+                                            <div className="text-xs text-muted-foreground mb-1">{formatPhone(doctor.phone_mobile ?? "")}</div>
                                             <div className="text-sm text-muted-foreground">{normalizeSpecialty(doctor.specialty)}</div>
                                             <div className="text-xs mt-1">
                                                 <span className={`px-2 py-0.5 rounded-full text-xs ${

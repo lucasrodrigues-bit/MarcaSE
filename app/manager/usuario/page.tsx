@@ -62,6 +62,13 @@ function UserActionMenu({ user, onOpenDetails, onDelete }: UserActionMenuProps) 
     );
 }
 
+const formatPhone = (v: string) => {
+  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
+  if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  return d;
+};
+
 export default function UsersPage() {
     const [users, setUsers] = useState<FlatUser[]>([]);
     const [loading, setLoading] = useState(true);
@@ -273,7 +280,7 @@ export default function UsersPage() {
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell break-all">{u.email}</td>
-                                            <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{u.phone}</td>
+                                            <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{formatPhone(u.phone ?? "")}</td>
                                             <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell capitalize">{u.role}</td>
                                             <td className="px-4 py-3 text-right">
                                                 <UserActionMenu
@@ -365,7 +372,7 @@ export default function UsersPage() {
                                         <div><strong>ID:</strong> {userDetails.user.id}</div>
                                         <div><strong>E-mail:</strong> {userDetails.user.email}</div>
                                         <div><strong>Nome completo:</strong> {userDetails.profile.full_name}</div>
-                                        <div><strong>Telefone:</strong> {userDetails.profile.phone}</div>
+                                        <div><strong>Telefone:</strong> {formatPhone(userDetails.profile.phone ?? "")}</div>
                                         <div><strong>Roles:</strong> {userDetails.roles?.join(", ")}</div>
                                         <div className="pt-2">
                                             <strong className="block mb-1">Permissões:</strong>

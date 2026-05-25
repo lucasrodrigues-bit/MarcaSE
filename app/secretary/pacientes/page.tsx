@@ -51,6 +51,19 @@ function ActionMenu({ patientId, onOpenDetails, onSchedule, onDelete }: ActionMe
     );
 }
 
+const formatPhone = (v: string) => {
+    const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
+    if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+    if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+    return d || "—";
+};
+
+const formatCPF = (v: string) => {
+    const d = (v ?? "").replace(/\D/g, "");
+    if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    return v || "—";
+};
+
 export default function PacientesPage() {
     const router = useRouter();
     const [searchTerm, setSearchTerm] = useState("");
@@ -91,7 +104,7 @@ export default function PacientesPage() {
             const mapped = res.map((p: any) => ({
                 id: String(p.id ?? ""),
                 nome: p.full_name ?? "—",
-                telefone: p.phone_mobile ?? p.phone1 ?? "—",
+                telefone: formatPhone(p.phone_mobile ?? p.phone1 ?? ""),
                 cidade: p.city ?? "—",
                 estado: p.state ?? "—",
                 ultimoAtendimento: p.last_visit_at?.split('T')[0] ?? "—",
@@ -357,9 +370,9 @@ export default function PacientesPage() {
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div><p className="font-semibold">Nome Completo</p><p>{patientDetails.full_name}</p></div>
                                             <div><p className="font-semibold">Email</p><p>{patientDetails.email}</p></div>
-                                            <div><p className="font-semibold">Telefone</p><p>{patientDetails.phone_mobile}</p></div>
+                                            <div><p className="font-semibold">Telefone</p><p>{formatPhone(patientDetails.phone_mobile ?? "")}</p></div>
                                             <div><p className="font-semibold">Data de Nascimento</p><p>{patientDetails.birth_date}</p></div>
-                                            <div><p className="font-semibold">CPF</p><p>{patientDetails.cpf}</p></div>
+                                            <div><p className="font-semibold">CPF</p><p>{formatCPF(patientDetails.cpf ?? "")}</p></div>
                                             <div><p className="font-semibold">Tipo Sanguíneo</p><p>{patientDetails.blood_type}</p></div>
                                             <div><p className="font-semibold">Peso (kg)</p><p>{patientDetails.weight_kg}</p></div>
                                             <div><p className="font-semibold">Altura (m)</p><p>{patientDetails.height_m}</p></div>

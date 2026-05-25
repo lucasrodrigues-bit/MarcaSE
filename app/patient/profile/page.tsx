@@ -1,13 +1,14 @@
 // Caminho: app/patient/profile/page.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { useAuthLayout } from "@/hooks/useAuthLayout";
 import { patientsService } from "@/services/patientsApi.mjs";
 import { usersService } from "@/services/usersApi.mjs";
 import { api } from "@/services/api.mjs";
+import { reportsApi } from "@/services/reportsApi.mjs";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   User, Mail, Phone, Calendar, Upload, Lock, Pencil, Save,
-  MapPin, Info, Shield,
+  MapPin, Info, Shield, FileText,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +39,19 @@ interface EditableFields {
   city: string;
   email: string;
 }
+
+const formatCPF = (v: string) => {
+  const d = v.replace(/\D/g, "");
+  if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+  return v;
+};
+
+const formatPhone = (v: string) => {
+  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
+  if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  return d;
+};
 
 const ROLE_LABELS: Record<string, string> = {
   paciente: "Paciente",
@@ -63,6 +77,7 @@ export default function PatientProfile() {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [patientReports, setPatientReports] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getInitials = (name: string) => {
@@ -92,58 +107,70 @@ export default function PatientProfile() {
     });
   };
 
+  const loadData = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const [[patientDetails], userSystemData] = await Promise.all([
+        patientsService.getById(user.id),
+        usersService.getMe(),
+      ]);
+
+      const freshAvatarUrl = buildAvatarUrl(userSystemData?.profile?.avatar_url);
+      const userRole = userSystemData?.roles?.[0] ?? "paciente";
+
+      setReadOnly({
+        name: patientDetails?.full_name || user.name || "—",
+        cpf: patientDetails?.cpf ? formatCPF(patientDetails.cpf) : "Não informado",
+        birthDate: patientDetails?.birth_date || "",
+        cep: patientDetails?.cep || "Não informado",
+        avatarFullUrl: freshAvatarUrl,
+        memberSince: userSystemData?.profile?.created_at,
+        role: userRole,
+      });
+
+      setEditableFields({
+        phone: formatPhone(patientDetails?.phone_mobile || ""),
+        street: patientDetails?.street || "",
+        number: patientDetails?.number || "",
+        city: patientDetails?.city || "",
+        email: userSystemData?.profile?.email || user.email || "",
+      });
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
+      toast({
+        title: "Erro ao carregar perfil",
+        description: "Não foi possível exibir seus dados. Tente recarregar a página.",
+        variant: "destructive",
+      });
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
   useEffect(() => {
     if (!user?.id) return;
-    const loadData = async () => {
-      try {
-        const [[patientDetails], userSystemData] = await Promise.all([
-          patientsService.getById(user.id),
-          usersService.getMe(),
-        ]);
-
-        const freshAvatarUrl = buildAvatarUrl(userSystemData?.profile?.avatar_url);
-        const userRole = userSystemData?.roles?.[0] ?? "paciente";
-
-        setReadOnly({
-          name: patientDetails?.full_name || user.name || "—",
-          cpf: patientDetails?.cpf || "Não informado",
-          birthDate: patientDetails?.birth_date || "",
-          cep: patientDetails?.cep || "Não informado",
-          avatarFullUrl: freshAvatarUrl,
-          memberSince: userSystemData?.profile?.created_at,
-          role: userRole,
-        });
-
-        setEditableFields({
-          phone: patientDetails?.phone_mobile || "",
-          street: patientDetails?.street || "",
-          number: patientDetails?.number || "",
-          city: patientDetails?.city || "",
-          email: userSystemData?.profile?.email || user.email || "",
-        });
-      } catch (error) {
-        console.error("Erro ao buscar dados:", error);
-        toast({
-          title: "Erro ao carregar perfil",
-          description: "Não foi possível exibir seus dados. Tente recarregar a página.",
-          variant: "destructive",
-        });
-      }
-    };
-    loadData();
+    reportsApi
+      .getReports(user.id)
+      .then((reports: any[]) =>
+        setPatientReports((reports ?? []).filter((r: any) => r.status === "completed"))
+      )
+      .catch(() => {});
   }, [user?.id]);
 
   const handleEditableChange = (field: keyof EditableFields, value: string) => {
-    setEditableFields((prev) => ({ ...prev, [field]: value }));
+    const formatted = field === "phone" ? formatPhone(value) : value;
+    setEditableFields((prev) => ({ ...prev, [field]: formatted }));
   };
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user?.id) return;
     setIsSaving(true);
     try {
       await Promise.all([
         patientsService.update(user.id, {
-          phone_mobile: editableFields.phone,
+          phone_mobile: editableFields.phone.replace(/\D/g, ""),
           street: editableFields.street,
           number: editableFields.number,
           city: editableFields.city,
@@ -158,7 +185,7 @@ export default function PatientProfile() {
         description: "Suas informações foram salvas com sucesso.",
       });
       setIsEditing(false);
-      router.refresh();
+      await loadData();
     } catch (error) {
       console.error("Erro ao salvar:", error);
       toast({
@@ -173,7 +200,7 @@ export default function PatientProfile() {
 
   const handleCancel = () => {
     setIsEditing(false);
-    router.refresh();
+    loadData();
   };
 
   const handleAvatarClick = () => fileInputRef.current?.click();
@@ -430,6 +457,46 @@ export default function PatientProfile() {
                     />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Card 4: Meus Laudos */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                  <FileText className="h-4 w-4 text-primary" />
+                  Meus Laudos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {patientReports.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhum laudo disponível no momento.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {patientReports.map((report) => (
+                      <div
+                        key={report.id}
+                        className="flex items-start justify-between rounded-lg border border-border p-3 gap-3"
+                      >
+                        <div className="space-y-0.5 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {report.exam || "Laudo médico"}
+                          </p>
+                          {report.diagnosis && (
+                            <p className="text-xs text-muted-foreground truncate">{report.diagnosis}</p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(report.created_at).toLocaleDateString("pt-BR")}
+                            {report.requested_by && ` · ${report.requested_by}`}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-xs font-medium text-green-700 bg-green-100 rounded-full px-2 py-0.5">
+                          Confirmado
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
