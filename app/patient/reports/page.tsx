@@ -115,8 +115,8 @@ export default function ReportsPage() {
     setSelectedReport(null)
   }
 
-  const availableReports = reports.filter((report) => report.status.toLowerCase() === "draft")
-  const pendingReports = reports.filter((report) => report.status.toLowerCase() !== "draft")
+  const availableReports = reports.filter((report) => report.status.toLowerCase() === "completed")
+  const pendingReports = reports.filter((report) => report.status.toLowerCase() !== "completed")
 
   if (isLoading || isAuthLoading) {
     return (

@@ -46,6 +46,7 @@ export const appointmentsService = {
    */
   delete: (id) => api.delete(`/rest/v1/appointments?id=eq.${id}`),
 
-  
-
+  confirmAppointment: (id) => api.patch(`/rest/v1/appointments?id=eq.${id}`, { status: 'confirmed' }),
+  completeAppointment: (id) => api.patch(`/rest/v1/appointments?id=eq.${id}`, { status: 'completed' }),
+  cancelAppointment: (id) => api.patch(`/rest/v1/appointments?id=eq.${id}`, { status: 'cancelled' }),
 };

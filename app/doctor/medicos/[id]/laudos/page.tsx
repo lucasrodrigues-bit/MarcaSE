@@ -9,6 +9,7 @@ import { useParams } from 'next/navigation';
 import { api } from '@/services/api.mjs';
 import { reportsApi } from '@/services/reportsApi.mjs';
 import Sidebar from '@/components/Sidebar';
+import { Badge } from '@/components/ui/badge';
 
 export default function LaudosPage() {
     const [patient, setPatient] = useState(null);
@@ -93,11 +94,16 @@ export default function LaudosPage() {
                                                     <TableCell>{laudo.order_number}</TableCell>
                                                     <TableCell>{laudo.exam}</TableCell>
                                                     <TableCell>{laudo.diagnosis}</TableCell>
-                                                    <TableCell>{laudo.status}</TableCell>
+                                                    <TableCell>
+                                                        {laudo.status === 'draft' && <Badge variant="secondary">Rascunho</Badge>}
+                                                        {laudo.status === 'completed' && <Badge className="bg-green-600 text-white">Entregue</Badge>}
+                                                    </TableCell>
                                                     <TableCell>{new Date(laudo.created_at).toLocaleDateString()}</TableCell>
                                                     <TableCell>
                                                         <Link href={`/doctor/medicos/${patientId}/laudos/${laudo.id}/editar`}>
-                                                            <Button variant="outline" size="sm">Editar</Button>
+                                                            <Button variant="outline" size="sm" disabled={laudo.status === 'completed'}>
+                                                                {laudo.status === 'completed' ? 'Visualizar' : 'Editar'}
+                                                            </Button>
                                                         </Link>
                                                     </TableCell>
                                                 </TableRow>

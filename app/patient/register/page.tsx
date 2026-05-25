@@ -55,7 +55,7 @@ export default function PatientRegister() {
       const payload = {
         email: formData.email.trim().toLowerCase(),
         full_name: formData.name,
-        phone_mobile: formData.phone, // O endpoint espera 'phone_mobile'
+        phone_mobile: formData.phone.replace(/\D/g, ''),
         cpf: formData.cpf.replace(/\D/g, ''),
         birth_date: formData.birthDate,
       }
@@ -65,7 +65,7 @@ export default function PatientRegister() {
 
       // ALTERADO: Mensagem de sucesso para refletir o fluxo de confirmação por e-mail
       toast({
-        title: "Cadastro enviado com sucesso!",
+        title: "manager/medicostro enviado com sucesso!",
         description: "Enviamos um link de confirmação para o seu e-mail. Por favor, verifique sua caixa de entrada para ativar sua conta.",
       })
 
@@ -76,7 +76,7 @@ export default function PatientRegister() {
       console.error("Erro no registro:", error)
       toast({
         title: "Erro ao Criar Conta",
-        description: error.message || "Não foi possível concluir o cadastro. Verifique seus dados e tente novamente.",
+        description: error.message || "Não foi possível concluir o manager/medicostro. Verifique seus dados e tente novamente.",
         variant: "destructive",
       })
     } finally {

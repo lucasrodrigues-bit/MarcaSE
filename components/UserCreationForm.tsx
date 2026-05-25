@@ -38,6 +38,7 @@ interface FormData {
   // staff (admin/gestor/secretaria)
   phone: string;
   phone_mobile: string;
+  department: string;
   // médico
   crm: string;
   crm_uf: string;
@@ -97,6 +98,7 @@ const EMPTY_FORM: FormData = {
   role: "",
   phone: "",
   phone_mobile: "",
+  department: "",
   crm: "",
   crm_uf: "",
   specialty: "",
@@ -192,7 +194,16 @@ function parseApiError(rawError: unknown): string {
     const m = rawMessage.match(/\{[\s\S]*\}/);
     if (m) {
       const p = JSON.parse(m[0]) as Record<string, unknown>;
-      errorText = String(p.error ?? p.message ?? p.detail ?? rawMessage);
+      // RFC 7807: se tiver `errors` (objeto com erros por campo), lista os primeiros
+      if (p.errors && typeof p.errors === "object" && !Array.isArray(p.errors)) {
+        const fieldErrors = p.errors as Record<string, string[]>;
+        const lines = Object.entries(fieldErrors)
+          .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`)
+          .join(" | ");
+        errorText = lines || String(p.detail ?? p.error ?? p.message ?? rawMessage);
+      } else {
+        errorText = String(p.detail ?? p.error ?? p.message ?? rawMessage);
+      }
     }
   } catch {
     /* not JSON */
@@ -285,6 +296,7 @@ export default function UserCreationForm({
   const isDoctor = form.role === "medico";
   const isPatient = form.role === "paciente";
   const isStaff = form.role === "admin" || form.role === "gestor" || form.role === "secretaria";
+  const needsDepartment = form.role === "gestor" || form.role === "secretaria";
 
   const pageTitle =
     form.role && form.role in ROLE_LABELS
@@ -314,6 +326,9 @@ export default function UserCreationForm({
     if (isPatient && !form.phone_mobile) {
       setError("Para paciente, o celular é obrigatório."); return;
     }
+    if (needsDepartment && !form.department.trim()) {
+      setError("O departamento é obrigatório para gestor e secretária."); return;
+    }
 
     setIsSaving(true);
     try {
@@ -330,6 +345,7 @@ export default function UserCreationForm({
       if (isStaff) {
         if (form.phone) payload.phone = cleanDigits(form.phone) || null;
         if (form.phone_mobile) payload.phone_mobile = cleanDigits(form.phone_mobile) || null;
+        if (needsDepartment) payload.department = form.department.trim();
       }
 
       if (isDoctor) {
@@ -542,6 +558,20 @@ export default function UserCreationForm({
                     maxLength={15}
                   />
                 </div>
+
+                {needsDepartment && (
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="department">Departamento *</Label>
+                    <Input
+                      id="department"
+                      value={form.department}
+                      onChange={(e) => set("department", e.target.value)}
+                      placeholder="Ex: Administrativo, Recepção..."
+                      maxLength={100}
+                      required
+                    />
+                  </div>
+                )}
               </>
             )}
 

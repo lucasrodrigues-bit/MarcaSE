@@ -291,7 +291,7 @@ export default function DoctorsPage() {
                     ) : filteredDoctors.length === 0 ? (
                         <div className="p-8 text-center text-muted-foreground">
                             {doctors.length === 0
-                                ? <>Nenhum médico cadastrado. <Link href="/manager/home/novo" className="text-primary hover:underline">Adicione um novo</Link>.</>
+                                ? <>Nenhum médico cadastrado. <Link href="/manager/medicos/novo" className="text-primary hover:underline">Adicione um novo</Link>.</>
                                 : "Nenhum médico encontrado com os filtros aplicados."
                             }
                         </div>
@@ -349,7 +349,7 @@ export default function DoctorsPage() {
                                                             Ver detalhes
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem asChild>
-                                                            <Link href={`/manager/home/${doctor.id}/editar`}>
+                                                            <Link href={`/manager/medicos/${doctor.id}/editar`}>
                                                                 <Edit className="mr-2 h-4 w-4" />
                                                                 Editar
                                                             </Link>
@@ -385,7 +385,7 @@ export default function DoctorsPage() {
                     ) : filteredDoctors.length === 0 ? (
                         <div className="p-8 text-center text-muted-foreground">
                             {doctors.length === 0
-                                ? <>Nenhum médico cadastrado. <Link href="/manager/home/novo" className="text-primary hover:underline">Adicione um novo</Link>.</>
+                                ? <>Nenhum médico cadastrado. <Link href="/manager/medicos/novo" className="text-primary hover:underline">Adicione um novo</Link>.</>
                                 : "Nenhum médico encontrado com os filtros aplicados."
                             }
                         </div>
@@ -422,7 +422,7 @@ export default function DoctorsPage() {
                                                 Ver detalhes
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
-                                                <Link href={`/manager/home/${doctor.id}/editar`}>
+                                                <Link href={`/manager/medicos/${doctor.id}/editar`}>
                                                     <Edit className="mr-2 h-4 w-4" />
                                                     Editar
                                                 </Link>
