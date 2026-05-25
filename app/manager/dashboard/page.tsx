@@ -14,7 +14,6 @@ import {
   Cell,
   LineChart,
   Line,
-  Legend,
 } from "recharts";
 import {
   Card,
@@ -23,7 +22,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,7 +53,6 @@ import {
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import { usersService } from "@/services/usersApi.mjs";
-import { appointmentsService } from "@/services/appointmentsApi.mjs";
 import { doctorsService } from "@/services/doctorsApi.mjs";
 import { api } from "@/services/api.mjs";
 
@@ -66,7 +63,7 @@ interface Appointment {
   patient_id?: string;
   doctor_id?: string;
   scheduled_at: string;
-  status: "scheduled" | "confirmed" | "cancelled" | "no_show" | "completed";
+  status: "requested" | "scheduled" | "confirmed" | "cancelled" | "no_show" | "completed";
   notes?: string;
   patient_name?: string;
   doctor_name?: string;
@@ -112,6 +109,11 @@ interface DashboardStats {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const STATUS_CONFIG = {
+  requested: {
+    label: "Confirmação Pendente",
+    color: "#f97316",
+    bg: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  },
   scheduled: {
     label: "Agendado",
     color: "#3b82f6",
@@ -418,8 +420,10 @@ export default function ManagerDashboard() {
     const completed = appointments.filter((a) => a.status === "completed");
     const confirmed = appointments.filter((a) => a.status === "confirmed");
     const noShowRate =
-      appointments.length > 0
-        ? Math.round((noShow.length / appointments.length) * 100)
+      confirmed.length > 0
+        ? Math.round(
+            ((confirmed.length - completed.length) / confirmed.length) * 100,
+          )
         : 0;
 
     return {
@@ -549,7 +553,7 @@ export default function ManagerDashboard() {
           <StatCard
             title="Taxa de Absenteísmo"
             value={`${stats.noShowRate}%`}
-            subtitle={`${stats.noShowCount} ausências registradas`}
+            subtitle={`${stats.confirmedCount} confirmadas · ${stats.completedCount} concluídas`}
             icon={AlertCircle}
             trend={{ value: stats.noShowRate, positive: stats.noShowRate < 20 }}
             loading={loading}
