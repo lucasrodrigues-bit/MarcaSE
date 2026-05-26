@@ -419,10 +419,10 @@ export default function ManagerDashboard() {
     const cancelled = appointments.filter((a) => a.status === "cancelled");
     const completed = appointments.filter((a) => a.status === "completed");
     const confirmed = appointments.filter((a) => a.status === "confirmed");
-    const absentCount = cancelled.length + noShow.length;
+    const denominator = confirmed.length + noShow.length;
     const noShowRate =
-      appointments.length > 0
-        ? Math.round((absentCount / appointments.length) * 100)
+      denominator > 0
+        ? Math.round((noShow.length / denominator) * 100)
         : 0;
 
     return {
