@@ -41,9 +41,9 @@ interface EditableFields {
 }
 
 const formatCPF = (v: string) => {
-  const d = v.replace(/\D/g, "");
+  const d = (v ?? "").replace(/\D/g, "");
   if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-  return v;
+  return d;
 };
 
 const formatPhone = (v: string) => {

@@ -18,13 +18,14 @@ export const usersService = {
     },
 
     async create_user(data) {
-        // Esta é a função usada no page.tsx para criar usuários que não são médicos
+        const { role } = data;
+        if (role === "medico") return await api.post(`/functions/v1/create-doctor`, data);
+        if (role === "paciente") return await api.post(`/functions/v1/create-patient`, data);
         return await api.post(`/functions/v1/create-user-with-password`, data);
     },
 
     async registerPatient(data) {
-        // POR QUÊ? Este endpoint é público e não requer token JWT, resolvendo o erro 401.
-        return await api.post("/functions/v1/register-patient", data);
+        return await api.post("/functions/v1/register-patient-with-password", data);
     },
     // --- FIM DA NOVA FUNÇÃO ---
 
@@ -91,27 +92,31 @@ export const usersService = {
         if (!email) throw new Error("Email é obrigatório para resetar a senha.");
 
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/recover`, {
+            const redirectUrl = typeof window !== "undefined"
+                ? `${window.location.origin}/reset-password`
+                : undefined;
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/request-password-reset`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
                 },
-                body: JSON.stringify({ email }),
+                body: JSON.stringify({ email, ...(redirectUrl && { redirect_url: redirectUrl }) }),
             });
 
             const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
                 console.error("Erro no resetPassword:", res.status, data);
-                throw new Error(`Erro ${res.status}: ${data.message || "Falha ao resetar senha."}`);
+                throw new Error(`Erro ${res.status}: ${data.detail || data.title || "Falha ao resetar senha."}`);
             }
 
             console.log("✅ Reset de senha:", data);
             return data;
         } catch (err) {
             console.error("❌ Erro na chamada resetPassword:", err);
-            throw new Error(err.message || "Erro inesperado na recuperação de senha.");
+            throw err instanceof Error ? err : new Error("Erro inesperado na recuperação de senha.");
         }
     },
 };

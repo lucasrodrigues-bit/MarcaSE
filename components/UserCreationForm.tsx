@@ -32,9 +32,9 @@ interface FormData {
   // comum a todos
   full_name: string;
   email: string;
+  cpf: string;
   password: string;
   confirm_password: string;
-  cpf: string;
   role: AllowedRole | "";
   // staff (admin/gestor/secretaria)
   phone: string;
@@ -93,9 +93,9 @@ interface FormData {
 const EMPTY_FORM: FormData = {
   full_name: "",
   email: "",
+  cpf: "",
   password: "",
   confirm_password: "",
-  cpf: "",
   role: "",
   phone: "",
   phone_mobile: "",
@@ -309,17 +309,17 @@ export default function UserCreationForm({
     setError(null);
 
     if (!form.role) { setError("Selecione a função do usuário."); return; }
-    if (!form.full_name || !form.email || !form.password || !form.confirm_password || !form.cpf) {
+    if (!form.full_name || !form.email || !form.cpf) {
       setError("Preencha todos os campos obrigatórios."); return;
-    }
-    if (form.password !== form.confirm_password) {
-      setError("A senha e a confirmação não coincidem."); return;
-    }
-    if (form.password.length < 6) {
-      setError("A senha deve ter no mínimo 6 caracteres."); return;
     }
     if (!isValidCPF(cleanDigits(form.cpf))) {
       setError("CPF inválido. Verifique os dígitos."); return;
+    }
+    if (!form.password || form.password.length < 6) {
+      setError("A senha deve ter no mínimo 6 caracteres."); return;
+    }
+    if (form.password !== form.confirm_password) {
+      setError("As senhas não coincidem."); return;
     }
     if (isDoctor && (!form.crm || !form.crm_uf)) {
       setError("Para médico, CRM e UF do CRM são obrigatórios."); return;
@@ -354,9 +354,9 @@ export default function UserCreationForm({
 
       const payload: Record<string, unknown> = {
         email: form.email.trim().toLowerCase(),
-        password: form.password,
         full_name: form.full_name.trim(),
         cpf: cpfRaw,
+        password: form.password,
         role: form.role,
       };
 
@@ -530,7 +530,6 @@ export default function UserCreationForm({
                 value={form.password}
                 onChange={(e) => set("password", e.target.value)}
                 placeholder="Mínimo 6 caracteres"
-                minLength={6}
                 required
               />
             </div>
@@ -545,9 +544,6 @@ export default function UserCreationForm({
                 placeholder="Repita a senha"
                 required
               />
-              {form.password && form.confirm_password && form.password !== form.confirm_password && (
-                <p className="text-xs text-destructive">As senhas não coincidem.</p>
-              )}
             </div>
 
             {/* ══════════════════════════════════════════════════════════════════

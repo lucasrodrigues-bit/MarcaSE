@@ -18,7 +18,7 @@ export const reportsApi = {
 
   getReports: async (patientId) => {
     try {
-      const data = await api.get(`${REPORTS_API_URL}?patient_id=eq.${patientId}`);
+      const data = await api.get(`${REPORTS_API_URL}?patient_id=eq.${patientId}&order=created_at.desc`);
       return data;
     } catch (error) {
       console.error("Failed to fetch reports:", error);
@@ -46,8 +46,13 @@ export const reportsApi = {
     }
   },
   updateReport: async (reportId, reportData) => {
+    if (!reportData.patient_id) throw new Error('updateReport: patient_id é obrigatório');
     try {
-      const data = await api.patch(`${REPORTS_API_URL}?id=eq.${reportId}`, reportData);
+      const data = await api.patch(
+        `${REPORTS_API_URL}?id=eq.${reportId}`,
+        reportData,
+        { headers: { Prefer: 'return=representation' } }
+      );
       return data;
     } catch (error) {
       console.error(`Failed to update report ${reportId}:`, error);
@@ -63,6 +68,15 @@ export const reportsApi = {
       return data;
     } catch (error) {
       console.error(`Failed to send report ${reportId} to patient:`, error);
+      throw error;
+    }
+  },
+  deleteReport: async (reportId) => {
+    try {
+      const data = await api.delete(`${REPORTS_API_URL}?id=eq.${reportId}`);
+      return data;
+    } catch (error) {
+      console.error(`Failed to delete report ${reportId}:`, error);
       throw error;
     }
   },
