@@ -1,5 +1,5 @@
-const BASE_URL = "https://yuanqfswhberkoevtmfr.supabase.co";
-const API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1YW5xZnN3aGJlcmtvZXZ0bWZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NTQzNjksImV4cCI6MjA3MDUzMDM2OX0.g8Fm4XAvtX46zifBZnYVH4tVuQkqUH6Ia9CXQj4DztQ";
+const BASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const API_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export async function login(email, senha) {
     console.log("🔐 Iniciando login...");

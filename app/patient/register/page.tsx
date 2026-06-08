@@ -11,23 +11,7 @@ import { Label } from "@/components/ui/label"
 import { ArrowLeft, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { usersService } from "@/services/usersApi.mjs" // Mantém a importação
-import { smsService } from "@/services/Sms.mjs"
 import { isValidCPF } from "@/lib/utils"
-
-const formatPhone = (v: string) => {
-  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
-  if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
-  return d;
-};
-
-const formatCPF = (v: string) => {
-  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
-  if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-  if (d.length > 6) return d.replace(/(\d{3})(\d{3})(\d+)/, "$1.$2.$3");
-  if (d.length > 3) return d.replace(/(\d{3})(\d+)/, "$1.$2");
-  return d;
-};
 
 export default function PatientRegister() {
   // REMOVIDO: Estados para 'showPassword' e 'showConfirmPassword'
@@ -44,12 +28,9 @@ export default function PatientRegister() {
   const { toast } = useToast()
 
   const handleInputChange = (field: string, value: string) => {
-    let v = value;
-    if (field === "phone") v = formatPhone(value);
-    else if (field === "cpf") v = formatCPF(value);
     setFormData((prev) => ({
       ...prev,
-      [field]: v,
+      [field]: value,
     }))
   }
 
@@ -74,33 +55,18 @@ export default function PatientRegister() {
       const payload = {
         email: formData.email.trim().toLowerCase(),
         full_name: formData.name,
-        phone_mobile: formData.phone.replace(/\D/g, ''),
+        phone_mobile: formData.phone, // O endpoint espera 'phone_mobile'
         cpf: formData.cpf.replace(/\D/g, ''),
         birth_date: formData.birthDate,
       }
 
       // ALTERADO: Chamada para a nova função de serviço
-      const registerResult = await usersService.registerPatient(payload)
-
-      // Enviar SMS de confirmação se houver telefone
-      if (payload.phone_mobile) {
-        const phoneFormatted = `+55${payload.phone_mobile}`;
-        try {
-          const token = (registerResult as any)?.access_token || undefined;
-          await smsService.sendSms({
-            phone_number: phoneFormatted,
-            message: `Olá, ${formData.name}! Seu cadastro no MarcaSE foi realizado. Verifique seu e-mail para ativar sua conta. 🎉`,
-            token,
-          });
-        } catch (smsErr) {
-          console.warn("⚠️ SMS de confirmação não enviado:", smsErr);
-        }
-      }
+      await usersService.registerPatient(payload)
 
       // ALTERADO: Mensagem de sucesso para refletir o fluxo de confirmação por e-mail
       toast({
         title: "Cadastro enviado com sucesso!",
-        description: "Enviamos um link de confirmação para o seu e-mail e um SMS de boas-vindas. Verifique sua caixa de entrada para ativar sua conta.",
+        description: "Enviamos um link de confirmação para o seu e-mail. Por favor, verifique sua caixa de entrada para ativar sua conta.",
       })
 
       // Redireciona para a página de login
@@ -110,7 +76,7 @@ export default function PatientRegister() {
       console.error("Erro no registro:", error)
       toast({
         title: "Erro ao Criar Conta",
-        description: error.message || "Não foi possível concluir o manager/medicostro. Verifique seus dados e tente novamente.",
+        description: error.message || "Não foi possível concluir o cadastro. Verifique seus dados e tente novamente.",
         variant: "destructive",
       })
     } finally {

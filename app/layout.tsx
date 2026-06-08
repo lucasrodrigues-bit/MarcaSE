@@ -5,21 +5,19 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "./providers";
-import ChatbotIA from "@/components/ChatbotIA";
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Providers>{children}</Providers>
-        <Analytics />
-        <Toaster />
-        <ChatbotIA />
-      </body>
-    </html>
-  );
+    return (
+        <html lang="en" suppressHydrationWarning>
+            <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+                <Providers>{children}</Providers>
+                <Analytics />
+                <Toaster />
+            </body>
+        </html>
+    );
 }

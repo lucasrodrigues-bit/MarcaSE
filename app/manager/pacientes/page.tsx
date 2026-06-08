@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,57 +13,7 @@ import Sidebar from "@/components/Sidebar";
 import { FilterBar } from "@/components/ui/filter-bar";
 import { UserAvatar } from "@/components/ui/user-avatar";
 
-interface ActionMenuProps {
-    patientId: string;
-    onOpenDetails: (id: string) => void;
-    onSchedule: (id: string) => void;
-    onDelete: (id: string) => void;
-}
-
-function ActionMenu({ patientId, onOpenDetails, onSchedule, onDelete }: ActionMenuProps) {
-    return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">Abrir menu</span>
-                    <MoreVertical className="h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onOpenDetails(patientId)}>
-                    <Eye className="w-4 h-4 mr-2" /> Ver detalhes
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link href={`/manager/pacientes/${patientId}/editar`} className="flex items-center w-full">
-                        <Edit className="w-4 h-4 mr-2" /> Editar
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onSchedule(patientId)}>
-                    <Calendar className="w-4 h-4 mr-2" /> Marcar consulta
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive" onClick={() => onDelete(patientId)}>
-                    <Trash2 className="w-4 h-4 mr-2" /> Excluir
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-    );
-}
-
-const formatPhone = (v: string) => {
-    const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
-    if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-    if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
-    return d || "—";
-};
-
-const formatCPF = (v: string) => {
-    const d = (v ?? "").replace(/\D/g, "");
-    if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-    return v || "—";
-};
-
 export default function PacientesPage() {
-    const router = useRouter();
     const [searchTerm, setSearchTerm] = useState("");
     const [filters, setFilters] = useState({ convenio: "all", vip: "all" });
     const [allPatients, setAllPatients] = useState<any[]>([]);
@@ -103,7 +52,7 @@ export default function PacientesPage() {
             const mapped = res.map((p: any) => ({
                 id: String(p.id ?? ""),
                 nome: p.full_name ?? "—",
-                telefone: formatPhone(p.phone_mobile ?? p.phone1 ?? ""),
+                telefone: p.phone_mobile ?? p.phone1 ?? "—",
                 cidade: p.city ?? "—",
                 estado: p.state ?? "—",
                 ultimoAtendimento: p.last_visit_at?.split('T')[0] ?? "—",
@@ -176,14 +125,32 @@ export default function PacientesPage() {
     };
     const visiblePageNumbers = getVisiblePageNumbers(totalPages, page);
 
-    const handleSchedule = (patientId: string) => {
-        router.push(`/manager/schedule?patientId=${patientId}`);
-    };
-
-    const handleDeleteOpen = (patientId: string) => {
-        setPatientToDelete(patientId);
-        setDeleteDialogOpen(true);
-    };
+    const ActionMenu = ({ patientId }: { patientId: string }) => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Abrir menu</span>
+                    <MoreVertical className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => openDetailsDialog(patientId)}>
+                    <Eye className="w-4 h-4 mr-2" /> Ver detalhes
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link href={`/manager/pacientes/${patientId}/editar`} className="flex items-center w-full">
+                        <Edit className="w-4 h-4 mr-2" /> Editar
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <Calendar className="w-4 h-4 mr-2" /> Marcar consulta
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive" onClick={() => { setPatientToDelete(patientId); setDeleteDialogOpen(true); }}>
+                    <Trash2 className="w-4 h-4 mr-2" /> Excluir
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
 
     return (
         <Sidebar>
@@ -230,7 +197,7 @@ export default function PacientesPage() {
                         <div className="p-8 text-center text-destructive">{error}</div>
                     ) : filteredPatients.length === 0 ? (
                         <div className="p-8 text-center text-muted-foreground">
-                            {allPatients.length === 0 ? "Nenhum paciente manager/medicostrado." : "Nenhum paciente encontrado com os filtros aplicados."}
+                            {allPatients.length === 0 ? "Nenhum paciente cadastrado." : "Nenhum paciente encontrado com os filtros aplicados."}
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
@@ -264,12 +231,7 @@ export default function PacientesPage() {
                                             <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{patient.ultimoAtendimento}</td>
                                             <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{patient.proximoAtendimento}</td>
                                             <td className="px-4 py-3 text-right">
-                                                <ActionMenu
-                                                    patientId={String(patient.id)}
-                                                    onOpenDetails={openDetailsDialog}
-                                                    onSchedule={handleSchedule}
-                                                    onDelete={handleDeleteOpen}
-                                                />
+                                                <ActionMenu patientId={String(patient.id)} />
                                             </td>
                                         </tr>
                                     ))}
@@ -290,7 +252,7 @@ export default function PacientesPage() {
                         <div className="p-8 text-center text-destructive">{error}</div>
                     ) : filteredPatients.length === 0 ? (
                         <div className="p-8 text-center text-muted-foreground">
-                            {allPatients.length === 0 ? "Nenhum paciente manager/medicostrado." : "Nenhum paciente encontrado com os filtros aplicados."}
+                            {allPatients.length === 0 ? "Nenhum paciente cadastrado." : "Nenhum paciente encontrado com os filtros aplicados."}
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -308,12 +270,7 @@ export default function PacientesPage() {
                                             <div className="text-xs text-muted-foreground">{patient.cidade} / {patient.estado}</div>
                                         </div>
                                     </div>
-                                    <ActionMenu
-                                        patientId={String(patient.id)}
-                                        onOpenDetails={openDetailsDialog}
-                                        onSchedule={handleSchedule}
-                                        onDelete={handleDeleteOpen}
-                                    />
+                                    <ActionMenu patientId={String(patient.id)} />
                                 </div>
                             ))}
                         </div>
@@ -369,7 +326,7 @@ export default function PacientesPage() {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div><p className="font-semibold text-xs text-muted-foreground">NOME</p><p>{patientDetails.full_name}</p></div>
                                         <div><p className="font-semibold text-xs text-muted-foreground">EMAIL</p><p className="break-all">{patientDetails.email}</p></div>
-                                        <div><p className="font-semibold text-xs text-muted-foreground">TELEFONE</p><p>{formatPhone(patientDetails.phone_mobile ?? "")}</p></div>
+                                        <div><p className="font-semibold text-xs text-muted-foreground">TELEFONE</p><p>{patientDetails.phone_mobile}</p></div>
                                         <div><p className="font-semibold text-xs text-muted-foreground">DATA NASC.</p><p>{patientDetails.birth_date}</p></div>
                                     </div>
                                     <div className="border-t pt-4">

@@ -53,13 +53,13 @@ export default function ExceptionPage() {
       setDoctorId(did);
 
       if (!did) {
-        toast({ title: "Atenção", description: "Sua conta não está associada a um médico cadastrado. Entre em contato com o suporte." });
+        toast({ title: "Atenção", description: "Registro de médico não encontrado para este usuário." });
         return;
       }
 
       await fetchExceptions(did);
     } catch (e: any) {
-      toast({ title: "Erro ao carregar", description: "Não foi possível carregar as informações. Tente recarregar a página." });
+      toast({ title: "Erro", description: e?.message || "Erro ao carregar dados." });
     }
   };
 
@@ -71,7 +71,7 @@ export default function ExceptionPage() {
       const data = await exceptionsService.listByDoctorId(id);
       setExceptions(Array.isArray(data) ? data : []);
     } catch (e: any) {
-      toast({ title: "Erro ao carregar exceções", description: "Não foi possível exibir as exceções cadastradas. Tente recarregar a página." });
+      toast({ title: "Erro", description: e?.message || "Erro ao carregar exceções." });
     } finally {
       setIsLoadingExceptions(false);
     }
@@ -94,7 +94,7 @@ export default function ExceptionPage() {
       return;
     }
     if (!doctorId || !authUserId) {
-      toast({ title: "Sessão expirada", description: "Sua sessão expirou. Faça login novamente.", variant: "destructive" });
+      toast({ title: "Erro", description: "Sessão inválida. Recarregue a página." });
       return;
     }
 
@@ -126,7 +126,7 @@ export default function ExceptionPage() {
       setTipo("");
       await fetchExceptions();
     } catch (err: any) {
-      toast({ title: "Erro ao salvar", description: "Não foi possível registrar a exceção. Tente novamente." });
+      toast({ title: "Erro", description: err?.message || "Não foi possível cadastrar a exceção" });
     } finally {
       setIsLoading(false);
     }
@@ -138,7 +138,7 @@ export default function ExceptionPage() {
       toast({ title: "Sucesso", description: "Exceção removida com sucesso" });
       setExceptions((prev) => prev.filter((ex) => ex.id !== id));
     } catch (e: any) {
-      toast({ title: "Erro ao remover", description: "Não foi possível remover a exceção. Tente novamente." });
+      toast({ title: "Erro", description: e?.message || "Não foi possível remover a exceção" });
     }
   };
 

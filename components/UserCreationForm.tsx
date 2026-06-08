@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/select";
 import { Save, Loader2 } from "lucide-react";
 import { usersService } from "@/services/usersApi.mjs";
-import { doctorsService } from "@/services/doctorsApi.mjs";
 import { isValidCPF } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -32,19 +31,17 @@ interface FormData {
   // comum a todos
   full_name: string;
   email: string;
-  cpf: string;
   password: string;
   confirm_password: string;
+  cpf: string;
   role: AllowedRole | "";
   // staff (admin/gestor/secretaria)
   phone: string;
   phone_mobile: string;
-  department: string;
   // médico
   crm: string;
   crm_uf: string;
   specialty: string;
-  active: boolean;
   // paciente + médico
   birth_date: string;
   // paciente – dados pessoais
@@ -93,17 +90,15 @@ interface FormData {
 const EMPTY_FORM: FormData = {
   full_name: "",
   email: "",
-  cpf: "",
   password: "",
   confirm_password: "",
+  cpf: "",
   role: "",
   phone: "",
   phone_mobile: "",
-  department: "",
   crm: "",
   crm_uf: "",
   specialty: "",
-  active: true,
   birth_date: "",
   social_name: "",
   rg: "",
@@ -195,16 +190,7 @@ function parseApiError(rawError: unknown): string {
     const m = rawMessage.match(/\{[\s\S]*\}/);
     if (m) {
       const p = JSON.parse(m[0]) as Record<string, unknown>;
-      // RFC 7807: se tiver `errors` (objeto com erros por campo), lista os primeiros
-      if (p.errors && typeof p.errors === "object" && !Array.isArray(p.errors)) {
-        const fieldErrors = p.errors as Record<string, string[]>;
-        const lines = Object.entries(fieldErrors)
-          .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`)
-          .join(" | ");
-        errorText = lines || String(p.detail ?? p.error ?? p.message ?? rawMessage);
-      } else {
-        errorText = String(p.detail ?? p.error ?? p.message ?? rawMessage);
-      }
+      errorText = String(p.error ?? p.message ?? p.detail ?? rawMessage);
     }
   } catch {
     /* not JSON */
@@ -297,7 +283,6 @@ export default function UserCreationForm({
   const isDoctor = form.role === "medico";
   const isPatient = form.role === "paciente";
   const isStaff = form.role === "admin" || form.role === "gestor" || form.role === "secretaria";
-  const needsDepartment = form.role === "gestor" || form.role === "secretaria";
 
   const pageTitle =
     form.role && form.role in ROLE_LABELS
@@ -309,43 +294,23 @@ export default function UserCreationForm({
     setError(null);
 
     if (!form.role) { setError("Selecione a função do usuário."); return; }
-    if (!form.full_name || !form.email || !form.cpf) {
+    if (!form.full_name || !form.email || !form.password || !form.confirm_password || !form.cpf) {
       setError("Preencha todos os campos obrigatórios."); return;
+    }
+    if (form.password !== form.confirm_password) {
+      setError("A senha e a confirmação não coincidem."); return;
+    }
+    if (form.password.length < 6) {
+      setError("A senha deve ter no mínimo 6 caracteres."); return;
     }
     if (!isValidCPF(cleanDigits(form.cpf))) {
       setError("CPF inválido. Verifique os dígitos."); return;
     }
-    if (!form.password || form.password.length < 6) {
-      setError("A senha deve ter no mínimo 6 caracteres."); return;
-    }
-    if (form.password !== form.confirm_password) {
-      setError("As senhas não coincidem."); return;
-    }
     if (isDoctor && (!form.crm || !form.crm_uf)) {
       setError("Para médico, CRM e UF do CRM são obrigatórios."); return;
     }
-    if (isDoctor) {
-      try {
-        const existingDoctors: any[] = await doctorsService.list();
-        const crmTrimmed = form.crm.trim().toUpperCase();
-        const ufTrimmed = form.crm_uf.trim().toUpperCase();
-        const duplicate = existingDoctors.some(
-          (d) => d.crm?.trim().toUpperCase() === crmTrimmed &&
-                 d.crm_uf?.trim().toUpperCase() === ufTrimmed
-        );
-        if (duplicate) {
-          setError(`Já existe um médico cadastrado com o CRM ${crmTrimmed}/${ufTrimmed}.`);
-          return;
-        }
-      } catch {
-        // se a checagem falhar, deixa o backend decidir
-      }
-    }
     if (isPatient && !form.phone_mobile) {
       setError("Para paciente, o celular é obrigatório."); return;
-    }
-    if (needsDepartment && !form.department.trim()) {
-      setError("O departamento é obrigatório para gestor e secretária."); return;
     }
 
     setIsSaving(true);
@@ -354,22 +319,20 @@ export default function UserCreationForm({
 
       const payload: Record<string, unknown> = {
         email: form.email.trim().toLowerCase(),
+        password: form.password,
         full_name: form.full_name.trim(),
         cpf: cpfRaw,
-        password: form.password,
         role: form.role,
       };
 
       if (isStaff) {
         if (form.phone) payload.phone = cleanDigits(form.phone) || null;
         if (form.phone_mobile) payload.phone_mobile = cleanDigits(form.phone_mobile) || null;
-        if (needsDepartment) payload.department = form.department.trim();
       }
 
       if (isDoctor) {
         payload.crm = form.crm.trim();
         payload.crm_uf = form.crm_uf;
-        payload.active = form.active;
         if (form.phone_mobile) payload.phone_mobile = cleanDigits(form.phone_mobile) || null;
         if (form.specialty) payload.specialty = form.specialty.trim();
         if (form.birth_date) payload.birth_date = form.birth_date;
@@ -530,6 +493,7 @@ export default function UserCreationForm({
                 value={form.password}
                 onChange={(e) => set("password", e.target.value)}
                 placeholder="Mínimo 6 caracteres"
+                minLength={6}
                 required
               />
             </div>
@@ -544,6 +508,9 @@ export default function UserCreationForm({
                 placeholder="Repita a senha"
                 required
               />
+              {form.password && form.confirm_password && form.password !== form.confirm_password && (
+                <p className="text-xs text-destructive">As senhas não coincidem.</p>
+              )}
             </div>
 
             {/* ══════════════════════════════════════════════════════════════════
@@ -572,20 +539,6 @@ export default function UserCreationForm({
                     maxLength={15}
                   />
                 </div>
-
-                {needsDepartment && (
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="department">Departamento *</Label>
-                    <Input
-                      id="department"
-                      value={form.department}
-                      onChange={(e) => set("department", e.target.value)}
-                      placeholder="Ex: Administrativo, Recepção..."
-                      maxLength={100}
-                      required
-                    />
-                  </div>
-                )}
               </>
             )}
 
@@ -646,17 +599,6 @@ export default function UserCreationForm({
                     value={form.birth_date}
                     onChange={(e) => set("birth_date", e.target.value)}
                   />
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Switch
-                    id="active"
-                    checked={form.active}
-                    onCheckedChange={(v) => set("active", v)}
-                  />
-                  <Label htmlFor="active" className="cursor-pointer">
-                    Médico Ativo
-                  </Label>
                 </div>
               </>
             )}

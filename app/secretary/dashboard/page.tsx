@@ -15,13 +15,6 @@ import { patientsService } from "@/services/patientsApi.mjs";
 import { appointmentsService } from "@/services/appointmentsApi.mjs";
 import Sidebar from "@/components/Sidebar";
 
-const formatPhone = (v: string) => {
-  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
-  if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
-  return d;
-};
-
 export default function SecretaryDashboard() {
   // Estados
   const [patients, setPatients] = useState<any[]>([]);
@@ -217,7 +210,7 @@ export default function SecretaryDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Perfil</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">100%</div>
@@ -268,14 +261,14 @@ export default function SecretaryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Pacientes</CardTitle>
-              <CardDescription>Últimos pacientes manager/medicostrados</CardDescription>
+              <CardDescription>Últimos pacientes cadastrados</CardDescription>
             </CardHeader>
             <CardContent>
               {loadingPatients ? (
                 <p className="text-sm text-muted-foreground">Carregando pacientes...</p>
               ) : patients.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Nenhum paciente manager/medicostrado.
+                  Nenhum paciente cadastrado.
                 </p>
               ) : (
                 <div className="space-y-4">
@@ -289,7 +282,9 @@ export default function SecretaryDashboard() {
                           {patient.full_name || "Sem nome"}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {formatPhone(patient.phone_mobile || patient.phone1 || "") || "Sem telefone"}
+                          {patient.phone_mobile ||
+                            patient.phone1 ||
+                            "Sem telefone"}
                         </p>
                       </div>
                       <div className="text-right">

@@ -34,32 +34,12 @@ export function LoginForm({ children }: LoginFormProps) {
   // ──────────────────────────────────────────────────────────────────────────
   // Redireciona o usuário para o dashboard correspondente ao perfil escolhido.
   // ──────────────────────────────────────────────────────────────────────────
-  const getLoginErrorMessage = (error: unknown): string => {
-    const msg = error instanceof Error ? error.message.toLowerCase() : "";
-    if (msg.includes("invalid login credentials") || msg.includes("invalid credentials"))
-      return "E-mail ou senha incorretos. Verifique e tente novamente.";
-    if (msg.includes("email not confirmed"))
-      return "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.";
-    if (msg.includes("nenhum perfil") || msg.includes("no profile"))
-      return "Sua conta não tem acesso configurado. Entre em contato com o suporte.";
-    if (msg.includes("too many requests") || msg.includes("rate limit"))
-      return "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.";
-    return "Não foi possível entrar. Verifique seus dados e tente novamente.";
-  };
-
-  const ROLE_LABELS_PT: Record<string, string> = {
-    gestor: "Gestor",
-    admin: "Administrador",
-    medico: "Médico",
-    secretaria: "Secretária",
-    paciente: "Paciente",
-  };
-
   const handleRoleSelection = (selectedDashboardRole: string, user: any) => {
     if (!user) {
       toast({
-        title: "Erro ao entrar",
-        description: "Não foi possível identificar sua conta. Tente novamente.",
+        title: "Erro de Sessão",
+        description:
+          "Não foi possível encontrar os dados do usuário. Tente novamente.",
         variant: "destructive",
       });
       return;
@@ -85,12 +65,12 @@ export function LoginForm({ children }: LoginFormProps) {
     const redirectPath = dashboardMap[roleInLowerCase];
 
     if (redirectPath) {
-      toast({ title: `Bem-vindo, ${ROLE_LABELS_PT[roleInLowerCase] ?? roleInLowerCase}!` });
+      toast({ title: `Entrando como ${roleInLowerCase}...` });
       router.push(redirectPath);
     } else {
       toast({
-        title: "Erro ao entrar",
-        description: "Tipo de acesso não reconhecido. Entre em contato com o suporte.",
+        title: "Erro",
+        description: "Perfil selecionado inválido.",
         variant: "destructive",
       });
     }
@@ -144,8 +124,11 @@ export function LoginForm({ children }: LoginFormProps) {
       localStorage.removeItem("token");
       localStorage.removeItem("user_info");
       toast({
-        title: "Erro no login",
-        description: getLoginErrorMessage(error),
+        title: "Erro no Login",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Ocorreu um erro inesperado.",
         variant: "destructive",
       });
       setIsLoading(false);

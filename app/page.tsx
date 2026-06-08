@@ -44,7 +44,7 @@ const FEATURES = [
     icon: Users,
     title: "Pacientes",
     description:
-      "manager/medicostro e controle inteligente de pacientes. Prontuários e históricos em um só lugar, sempre atualizados.",
+      "Cadastro e controle inteligente de pacientes. Prontuários e históricos em um só lugar, sempre atualizados.",
   },
   {
     icon: ClipboardList,
@@ -69,7 +69,7 @@ const FEATURES = [
 const HOW_IT_WORKS = [
   {
     step: "01",
-    title: "manager/medicostro simples",
+    title: "Cadastro simples",
     description:
       "Administradores configuram médicos, secretárias e a agenda da clínica em poucos minutos.",
   },

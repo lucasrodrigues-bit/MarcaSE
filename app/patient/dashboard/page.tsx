@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, CalendarPlus, Pencil,User } from "lucide-react";
+import { Calendar, Clock, CalendarPlus, Pencil } from "lucide-react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 

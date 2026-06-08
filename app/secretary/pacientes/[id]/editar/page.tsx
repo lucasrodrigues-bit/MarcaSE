@@ -157,7 +157,7 @@ export default function EditarPacientePage() {
                     id: res[0]?.id ?? "",
                     nome: res[0]?.full_name ?? "",
                     nomeSocial: res[0]?.social_name ?? "",
-                    cpf: formatCPF(res[0]?.cpf ?? ""),
+                    cpf: res[0]?.cpf ?? "",
                     rg: res[0]?.rg ?? "",
                     documentType: res[0]?.document_type ?? "",
                     documentNumber: res[0]?.document_number ?? "",
@@ -180,9 +180,9 @@ export default function EditarPacientePage() {
                     legacyCode: res[0]?.legacy_code ?? "",
                     notes: res[0]?.notes ?? "",
                     email: res[0]?.email ?? "",
-                    phoneMobile: formatPhone(res[0]?.phone_mobile ?? ""),
-                    phone1: formatPhone(res[0]?.phone1 ?? ""),
-                    phone2: formatPhone(res[0]?.phone2 ?? ""),
+                    phoneMobile: res[0]?.phone_mobile ?? "",
+                    phone1: res[0]?.phone1 ?? "",
+                    phone2: res[0]?.phone2 ?? "",
                     cep: res[0]?.cep ?? "",
                     street: res[0]?.street ?? "",
                     number: res[0]?.number ?? "",
@@ -211,34 +211,14 @@ export default function EditarPacientePage() {
                 });
 
             } catch (e: any) {
-                toast({ title: "Erro ao carregar paciente", description: "Não foi possível carregar os dados do paciente. Tente recarregar a página." });
+                toast({ title: "Erro", description: e?.message || "Falha ao carregar paciente" });
             }
         }
         fetchPatient();
     }, [patientId, toast]);
 
-    const cleanDigits = (v: string) => v.replace(/\D/g, "");
-
-    const formatCPF = (v: string) => {
-        const d = cleanDigits(v).substring(0, 11);
-        if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-        if (d.length > 6) return d.replace(/(\d{3})(\d{3})(\d+)/, "$1.$2.$3");
-        if (d.length > 3) return d.replace(/(\d{3})(\d+)/, "$1.$2");
-        return d;
-    };
-
-    const formatPhone = (v: string) => {
-        const d = cleanDigits(v).substring(0, 11);
-        if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-        if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
-        return d;
-    };
-
     const handleInputChange = (field: string, value: string) => {
-        let v = value;
-        if (field === "cpf" || field === "guardianCpf") v = formatCPF(value);
-        else if (field === "phoneMobile" || field === "phone1" || field === "phone2") v = formatPhone(value);
-        setFormData((prev) => ({ ...prev, [field]: v }));
+        setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -246,12 +226,9 @@ export default function EditarPacientePage() {
         // Build API payload (snake_case)
         const payload = {
             full_name: formData.nome || null,
-            cpf: cleanDigits(formData.cpf) || null,
+            cpf: formData.cpf || null,
             email: formData.email || null,
-            phone_mobile: cleanDigits(formData.phoneMobile ?? "") || null,
-            phone1: cleanDigits(formData.phone1 ?? "") || null,
-            phone2: cleanDigits(formData.phone2 ?? "") || null,
-            guardian_cpf: cleanDigits(formData.guardianCpf ?? "") || null,
+            phone_mobile: formData.phoneMobile || null,
             birth_date: formData.dataNascimento || null,
             social_name: formData.nomeSocial || null,
             sex: formData.sexo || null,
@@ -278,8 +255,8 @@ export default function EditarPacientePage() {
         } catch (err: any) {
             console.error("Erro ao atualizar paciente:", err);
             toast({
-                title: "Erro ao salvar",
-                description: "Não foi possível salvar as alterações. Verifique os dados e tente novamente.",
+                title: "Erro",
+                description: err?.message || "Não foi possível atualizar o paciente",
                 variant: "destructive"
             });
         }

@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Plus, Eye, Edit, Trash2, Loader2, Search, MoreVertical } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, Eye, Edit, Loader2, Search, MoreVertical } from "lucide-react";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { api, login } from "@/services/api.mjs";
 import { usersService } from "@/services/usersApi.mjs";
 import Sidebar from "@/components/Sidebar";
@@ -30,56 +30,26 @@ interface UserInfoResponse {
     permissions: Record<string, boolean>;
 }
 
-interface UserActionMenuProps {
-    user: FlatUser;
-    onOpenDetails: (user: FlatUser) => void;
-    onDelete: (userId: string) => void;
-}
-
-function UserActionMenu({ user, onOpenDetails, onDelete }: UserActionMenuProps) {
-    return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">Abrir menu</span>
-                    <MoreVertical className="h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onOpenDetails(user)}>
-                    <Eye className="mr-2 h-4 w-4" /> Ver detalhes
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link href={`/manager/usuario/${user.id}/editar`} className="flex items-center w-full">
-                        <Edit className="mr-2 h-4 w-4" /> Editar
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive" onClick={() => onDelete(user.id)}>
-                    <Trash2 className="mr-2 h-4 w-4" /> Excluir
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-    );
-}
-
-const formatPhone = (v: string) => {
-  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
-  if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
-  return d;
-};
-
 export default function UsersPage() {
+    const [userRole, setUserRole] = useState<string | null>(null);
+
+    useEffect(() => {
+        try {
+            const userInfoString = localStorage.getItem("user_info");
+            if (userInfoString) {
+                const userInfo = JSON.parse(userInfoString);
+                setUserRole(userInfo.user_metadata?.role ?? null);
+            }
+        } catch {}
+    }, []);
+
+    const isAdmin = userRole === "admin";
+
     const [users, setUsers] = useState<FlatUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
     const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
     const [userDetails, setUserDetails] = useState<UserInfoResponse | null>(null);
-
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [userToDelete, setUserToDelete] = useState<string | null>(null);
-    const [deleting, setDeleting] = useState(false);
 
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedRole, setSelectedRole] = useState<string>("all");
@@ -99,21 +69,21 @@ export default function UsersPage() {
                 for (const p of profilesData) { if (p?.id) profilesById.set(p.id, p); }
             }
 
-            const mapped: FlatUser[] = rolesArray
-                .filter((roleItem) => profilesById.has(roleItem.user_id))
-                .map((roleItem) => {
-                    const uid = roleItem.user_id;
-                    const profile = profilesById.get(uid);
-                    return {
-                        id: uid,
-                        user_id: uid,
-                        full_name: profile?.full_name ?? "—",
-                        email: profile?.email ?? "—",
-                        phone: profile?.phone ?? "—",
-                        role: roleItem.role ?? "—",
-                        avatar_url: profile?.avatar_url ?? null,
-                    };
-                });
+    const mapped: FlatUser[] = rolesArray
+    .filter((roleItem) => profilesById.has(roleItem.user_id))
+    .map((roleItem) => {                
+    const uid = roleItem.user_id;
+                const profile = profilesById.get(uid);
+                return {
+                    id: uid,
+                    user_id: uid,
+                    full_name: profile?.full_name ?? "—",
+                    email: profile?.email ?? "—",
+                    phone: profile?.phone ?? "—",
+                    role: roleItem.role ?? "—",
+                    avatar_url: profile?.avatar_url ?? null,
+                };
+            });
 
             setUsers(mapped);
             setCurrentPage(1);
@@ -150,26 +120,6 @@ export default function UsersPage() {
         }
     };
 
-    const handleDeleteOpen = (userId: string) => {
-        setUserToDelete(userId);
-        setDeleteDialogOpen(true);
-    };
-
-    const handleDeleteUser = async () => {
-        if (!userToDelete) return;
-        setDeleting(true);
-        try {
-            await usersService.delete_user(userToDelete);
-            setUsers((prev) => prev.filter((u) => u.id !== userToDelete));
-        } catch (e: any) {
-            alert(`Erro ao excluir usuário: ${e?.message || "Erro desconhecido"}`);
-        } finally {
-            setDeleting(false);
-            setDeleteDialogOpen(false);
-            setUserToDelete(null);
-        }
-    };
-
     const filteredUsers = users.filter((u) => {
         const roleMatch = selectedRole === "all" || u.role === selectedRole;
         const searchLower = searchTerm.toLowerCase();
@@ -198,12 +148,36 @@ export default function UsersPage() {
     };
     const visiblePageNumbers = getVisiblePageNumbers(totalPages, currentPage);
 
+    const ActionMenu = ({ user }: { user: FlatUser }) => {
+        if (!isAdmin) return null;
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Abrir menu</span>
+                        <MoreVertical className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openDetailsDialog(user)}>
+                        <Eye className="mr-2 h-4 w-4" /> Ver detalhes
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                        <Link href={`/manager/usuario/${user.id}/editar`} className="flex items-center w-full">
+                            <Edit className="mr-2 h-4 w-4" /> Editar
+                        </Link>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        );
+    };
+
     return (
         <Sidebar>
             <div className="space-y-6 px-2 sm:px-4 md:px-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div>
-                        <h1 className="text-2xl font-bold">Usuários manager/medicostrados</h1>
+                        <h1 className="text-2xl font-bold">Usuários Cadastrados</h1>
                         <p className="text-sm text-muted-foreground">Gerencie usuários do sistema.</p>
                     </div>
                     <Link href="/manager/usuario/novo" className="w-full sm:w-auto">
@@ -229,11 +203,11 @@ export default function UsersPage() {
                             <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Papel" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos</SelectItem>
-                                <SelectItem value="secretaria">Secretária</SelectItem>
                                 <SelectItem value="admin">Admin</SelectItem>
                                 <SelectItem value="gestor">Gestor</SelectItem>
                                 <SelectItem value="medico">Médico</SelectItem>
-                                <SelectItem value="paciente">Paciente</SelectItem>
+                                <SelectItem value="secretaria">Secretária</SelectItem>
+                                <SelectItem value="user">Usuário</SelectItem>
                             </SelectContent>
                         </Select>
                         <Select onValueChange={(v) => { setItemsPerPage(Number(v)); setCurrentPage(1); }} defaultValue={String(itemsPerPage)}>
@@ -280,14 +254,10 @@ export default function UsersPage() {
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell break-all">{u.email}</td>
-                                            <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{formatPhone(u.phone ?? "")}</td>
+                                            <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{u.phone}</td>
                                             <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell capitalize">{u.role}</td>
                                             <td className="px-4 py-3 text-right">
-                                                <UserActionMenu
-                                                    user={u}
-                                                    onOpenDetails={openDetailsDialog}
-                                                    onDelete={handleDeleteOpen}
-                                                />
+                                                <ActionMenu user={u} />
                                             </td>
                                         </tr>
                                     ))}
@@ -320,11 +290,7 @@ export default function UsersPage() {
                                             <div className="text-sm text-muted-foreground capitalize">{u.role}</div>
                                         </div>
                                     </div>
-                                    <UserActionMenu
-                                        user={u}
-                                        onOpenDetails={openDetailsDialog}
-                                        onDelete={handleDeleteOpen}
-                                    />
+                                    <ActionMenu user={u} />
                                 </div>
                             ))}
                         </div>
@@ -354,7 +320,7 @@ export default function UsersPage() {
                     </div>
                 )}
 
-                {/* Dialog Detalhes */}
+                {/* Modal Detalhes */}
                 <AlertDialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
                     <AlertDialogContent>
                         <AlertDialogHeader>
@@ -372,7 +338,7 @@ export default function UsersPage() {
                                         <div><strong>ID:</strong> {userDetails.user.id}</div>
                                         <div><strong>E-mail:</strong> {userDetails.user.email}</div>
                                         <div><strong>Nome completo:</strong> {userDetails.profile.full_name}</div>
-                                        <div><strong>Telefone:</strong> {formatPhone(userDetails.profile.phone ?? "")}</div>
+                                        <div><strong>Telefone:</strong> {userDetails.profile.phone}</div>
                                         <div><strong>Roles:</strong> {userDetails.roles?.join(", ")}</div>
                                         <div className="pt-2">
                                             <strong className="block mb-1">Permissões:</strong>
@@ -390,29 +356,6 @@ export default function UsersPage() {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Fechar</AlertDialogCancel>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-
-                {/* Dialog Exclusão */}
-                <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={handleDeleteUser}
-                                disabled={deleting}
-                                className="bg-destructive hover:bg-destructive/90"
-                            >
-                                {deleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                                Excluir
-                            </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>

@@ -112,26 +112,8 @@ export default function EditarMedicoPage() {
         }
     }, [doctorId]);
 
-    const cleanDigits = (v: string) => v.replace(/\D/g, "");
-    const formatCPF = (v: string) => {
-        const d = cleanDigits(v).substring(0, 11);
-        if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-        if (d.length > 6) return d.replace(/(\d{3})(\d{3})(\d+)/, "$1.$2.$3");
-        if (d.length > 3) return d.replace(/(\d{3})(\d+)/, "$1.$2");
-        return d;
-    };
-    const formatPhone = (v: string) => {
-        const d = cleanDigits(v).substring(0, 11);
-        if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-        if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
-        return d;
-    };
-
     const handleInputChange = (field: string, value: string) => {
-        let v = value;
-        if (field === "cpf") v = formatCPF(value);
-        else if (field === "celular" || field === "telefone1" || field === "telefone2") v = formatPhone(value);
-        setFormData((prev) => ({ ...prev, [field]: v }));
+        setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {

@@ -18,7 +18,7 @@ export const reportsApi = {
 
   getReports: async (patientId) => {
     try {
-      const data = await api.get(`${REPORTS_API_URL}?patient_id=eq.${patientId}&order=created_at.desc`);
+      const data = await api.get(`${REPORTS_API_URL}?patient_id=eq.${patientId}`);
       return data;
     } catch (error) {
       console.error("Failed to fetch reports:", error);
@@ -36,9 +36,7 @@ export const reportsApi = {
   },
   createReport: async (reportData) => {
     try {
-      const data = await api.post(REPORTS_API_URL, reportData, {
-        headers: { Prefer: 'return=representation' },
-      });
+      const data = await api.post(REPORTS_API_URL, reportData);
       return data;
     } catch (error) {
       console.error("Failed to create report:", error);
@@ -46,37 +44,11 @@ export const reportsApi = {
     }
   },
   updateReport: async (reportId, reportData) => {
-    if (!reportData.patient_id) throw new Error('updateReport: patient_id é obrigatório');
     try {
-      const data = await api.patch(
-        `${REPORTS_API_URL}?id=eq.${reportId}`,
-        reportData,
-        { headers: { Prefer: 'return=representation' } }
-      );
+      const data = await api.patch(`${REPORTS_API_URL}?id=eq.${reportId}`, reportData);
       return data;
     } catch (error) {
       console.error(`Failed to update report ${reportId}:`, error);
-      throw error;
-    }
-  },
-  sendToPatient: async (reportId, patientId) => {
-    try {
-      const data = await api.patch(`${REPORTS_API_URL}?id=eq.${reportId}`, {
-        patient_id: patientId,
-        status: 'completed',
-      });
-      return data;
-    } catch (error) {
-      console.error(`Failed to send report ${reportId} to patient:`, error);
-      throw error;
-    }
-  },
-  deleteReport: async (reportId) => {
-    try {
-      const data = await api.delete(`${REPORTS_API_URL}?id=eq.${reportId}`);
-      return data;
-    } catch (error) {
-      console.error(`Failed to delete report ${reportId}:`, error);
       throw error;
     }
   },

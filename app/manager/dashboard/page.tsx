@@ -14,6 +14,7 @@ import {
   Cell,
   LineChart,
   Line,
+  Legend,
 } from "recharts";
 import {
   Card,
@@ -22,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,6 +55,7 @@ import {
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import { usersService } from "@/services/usersApi.mjs";
+import { appointmentsService } from "@/services/appointmentsApi.mjs";
 import { doctorsService } from "@/services/doctorsApi.mjs";
 import { api } from "@/services/api.mjs";
 
@@ -63,7 +66,7 @@ interface Appointment {
   patient_id?: string;
   doctor_id?: string;
   scheduled_at: string;
-  status: "requested" | "scheduled" | "confirmed" | "cancelled" | "no_show" | "completed";
+  status: "scheduled" | "confirmed" | "cancelled" | "no_show" | "completed";
   notes?: string;
   patient_name?: string;
   doctor_name?: string;
@@ -109,11 +112,6 @@ interface DashboardStats {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const STATUS_CONFIG = {
-  requested: {
-    label: "Confirmação Pendente",
-    color: "#f97316",
-    bg: "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  },
   scheduled: {
     label: "Agendado",
     color: "#3b82f6",
@@ -419,10 +417,9 @@ export default function ManagerDashboard() {
     const cancelled = appointments.filter((a) => a.status === "cancelled");
     const completed = appointments.filter((a) => a.status === "completed");
     const confirmed = appointments.filter((a) => a.status === "confirmed");
-    const denominator = confirmed.length + noShow.length;
     const noShowRate =
-      denominator > 0
-        ? Math.round((noShow.length / denominator) * 100)
+      appointments.length > 0
+        ? Math.round((noShow.length / appointments.length) * 100)
         : 0;
 
     return {
@@ -552,7 +549,7 @@ export default function ManagerDashboard() {
           <StatCard
             title="Taxa de Absenteísmo"
             value={`${stats.noShowRate}%`}
-            subtitle={`${stats.confirmedCount} confirmadas · ${stats.completedCount} concluídas`}
+            subtitle={`${stats.noShowCount} ausências registradas`}
             icon={AlertCircle}
             trend={{ value: stats.noShowRate, positive: stats.noShowRate < 20 }}
             loading={loading}
@@ -711,8 +708,8 @@ export default function ManagerDashboard() {
                               name,
                             ]}
                             contentStyle={{
-                              background: "#ffffff",
-                              border: "1px solid #fefeff",
+                              background: "#0f172a",
+                              border: "1px solid #1e293b",
                               borderRadius: 8,
                               fontSize: 12,
                             }}
@@ -748,7 +745,7 @@ export default function ManagerDashboard() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[
                 {
-                  href: "/manager/medicos",
+                  href: "/manager/home",
                   label: "Gestão de Médicos",
                   icon: Stethoscope,
                   color: "text-blue-400",
@@ -1078,7 +1075,7 @@ export default function ManagerDashboard() {
                     {doctors.length} no total
                   </CardDescription>
                 </div>
-                <Link href="/manager/medicos">
+                <Link href="/manager/home">
                   <Button
                     size="sm"
                     variant="outline"

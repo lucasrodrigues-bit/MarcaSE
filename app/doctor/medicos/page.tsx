@@ -41,13 +41,6 @@ interface Paciente {
   avatar_url?: string | null;
 }
 
-const formatPhone = (v: string) => {
-  const d = (v ?? "").replace(/\D/g, "").substring(0, 11);
-  if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
-  return d;
-};
-
 export default function PacientesPage() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [filteredPacientes, setFilteredPacientes] = useState<Paciente[]>([]);
@@ -82,7 +75,7 @@ export default function PacientesPage() {
       const mapped: Paciente[] = (Array.isArray(items) ? items : []).map((p: any) => ({
         id: String(p.id ?? ""),
         nome: p.full_name ?? "—",
-        telefone: formatPhone(p.phone_mobile ?? ""),
+        telefone: p.phone_mobile ?? "—",
         cidade: p.city ?? "—",
         estado: p.state ?? "—",
         ultimoAtendimento: p.last_visit_at?.split("T")[0] ?? "—",

@@ -39,11 +39,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-interface ScheduleFormProps {
-  initialPatientId?: string;
-}
-
-export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
+export default function ScheduleForm() {
   // --- ESTADOS ---
   const [role, setRole] = useState<string>("paciente");
   const [userId, setUserId] = useState<string | null>(null);
@@ -52,10 +48,6 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
   const [patients, setPatients] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState("");
   const [openPatientCombobox, setOpenPatientCombobox] = useState(false);
-
-  // Estados de Especialidade
-  const [selectedSpecialty, setSelectedSpecialty] = useState("");
-  const [openSpecialtyCombobox, setOpenSpecialtyCombobox] = useState(false);
 
   // Estados de Médico
   const [doctors, setDoctors] = useState<any[]>([]);
@@ -105,13 +97,6 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
     })();
   }, []);
 
-  useEffect(() => {
-    if (initialPatientId && patients.length > 0) {
-      const exists = patients.some((p) => String(p.id) === String(initialPatientId));
-      if (exists) setSelectedPatient(initialPatientId);
-    }
-  }, [initialPatientId, patients]);
-
   const fetchDoctors = useCallback(async () => {
     setLoadingDoctors(true);
     try {
@@ -119,7 +104,7 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
       setDoctors(data || []);
     } catch (err) {
       console.error("Erro ao buscar médicos:", err);
-      toast({ title: "Erro ao carregar médicos", description: "Não foi possível exibir a lista de médicos. Tente recarregar a página." });
+      toast({ title: "Erro", description: "Não foi possível carregar médicos." });
     } finally {
       setLoadingDoctors(false);
     }
@@ -147,6 +132,7 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
       const start = format(today, "yyyy-MM-dd");
       const endDate = addDays(today, 90);
       const end = format(endDate, "yyyy-MM-dd");
+
       const appointments = await appointmentsService.search_appointment(
         `doctor_id=eq.${doctorId}&scheduled_at=gte.${start}T00:00:00Z&scheduled_at=lt.${end}T23:59:59Z`
       );
@@ -185,10 +171,6 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
       setAvailabilityCounts({});
     }
   };
-
-  useEffect(() => {
-    setSelectedDoctor("");
-  }, [selectedSpecialty]);
 
   useEffect(() => {
     if (selectedDoctor) {
@@ -235,7 +217,7 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
       setAvailableTimes(livres);
     } catch (err) {
       console.error(err);
-      toast({ title: "Erro ao carregar horários", description: "Não foi possível exibir os horários disponíveis. Tente novamente." });
+      toast({ title: "Erro", description: "Falha ao carregar horários." });
     } finally {
       setLoadingSlots(false);
     }
@@ -256,13 +238,6 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
       return;
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (new Date(selectedDate) < today) {
-      toast({ title: "Data inválida", description: "Não é possível agendar consultas em datas passadas." });
-      return;
-    }
-
     try {
       const body = {
         doctor_id: selectedDoctor,
@@ -270,38 +245,11 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
         scheduled_at: `${selectedDate}T${selectedTime}:00`,
         duration_minutes: Number(duracao),
         notes,
-        created_by:patientId,
         appointment_type: tipoConsulta,
-        
       };
 
-      console.log("📤 Request body (agendar consulta):", body);
-      const response = await appointmentsService.create(body);
-      console.log("📥 Response body (agendar consulta):", response);
+      await appointmentsService.create(body);
       const dateFormatted = selectedDate.split("-").reverse().join("/");
-
-      // Envia SMS de confirmação ao paciente
-      try {
-        const patientData = isSecretaryLike
-          ? patients.find((p) => p.id === patientId)
-          : (await patientsService.getById(patientId))?.[0];
-
-        const rawPhone = patientData?.phone_mobile || patientData?.phone_number;
-        if (rawPhone) {
-          const digits = rawPhone.replace(/\D/g, "");
-          const phone_number = digits.startsWith("55") ? `+${digits}` : `+55${digits}`;
-          const doctorName = doctors.find((d) => d.id === selectedDoctor)?.full_name || "médico";
-          await smsService.sendSms({
-            phone_number,
-            message: `Consulta confirmada com ${doctorName} em ${dateFormatted} às ${selectedTime}. Lembre-se de comparecer!`,
-            patient_id: patientId,
-          });
-        } else {
-          console.warn("⚠️ [SMS] Paciente sem telefone cadastrado, SMS não enviado.");
-        }
-      } catch (smsErr) {
-        console.error("⚠️ [SMS] Falha ao enviar confirmação:", smsErr);
-      }
 
       toast({
         title: "Consulta agendada!",
@@ -315,7 +263,7 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
       setSelectedPatient("");
     } catch (err) {
       console.error("❌ Erro ao agendar consulta:", err);
-      toast({ title: "Erro ao agendar", description: "Não foi possível realizar o agendamento. Tente novamente." });
+      toast({ title: "Erro", description: "Falha ao agendar consulta." });
     }
   };
 
@@ -436,139 +384,72 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
                     </div>
                   )}
 
-                  {/* ESPECIALIDADE + MÉDICO LADO A LADO */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* COMBOBOX DE MÉDICO */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Selecione o Médico</Label>
+                    
+                    <Popover open={openDoctorCombobox} onOpenChange={setOpenDoctorCombobox}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openDoctorCombobox}
+                          className="w-full justify-between"
+                          disabled={loadingDoctors}
+                        >
+                          {loadingDoctors ? "Carregando..." : (
+                            selectedDoctor
+                            ? doctors.find((doctor) => doctor.id === selectedDoctor)?.full_name
+                            : "Buscar médico..."
+                          )}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
 
-                    {/* COMBOBOX DE ESPECIALIDADE */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Especialidade</Label>
-                      <Popover open={openSpecialtyCombobox} onOpenChange={setOpenSpecialtyCombobox}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={openSpecialtyCombobox}
-                            className="w-full justify-between"
-                            disabled={loadingDoctors}
-                          >
-                            <span className="truncate">
-                              {loadingDoctors ? "Carregando..." : (selectedSpecialty || "Filtrar por especialidade...")}
-                            </span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] min-w-0 p-0" align="start" side="bottom">
-                          <Command>
-                            <CommandInput placeholder="Buscar especialidade..." />
-                            <CommandList className="max-h-[200px] overflow-y-auto">
-                              <CommandEmpty>Nenhuma especialidade encontrada.</CommandEmpty>
-                              <CommandGroup>
-                                {selectedSpecialty && (
-                                  <CommandItem
-                                    value="__all__"
-                                    onSelect={() => {
-                                      setSelectedSpecialty("");
-                                      setOpenSpecialtyCombobox(false);
-                                    }}
-                                    className="text-xs md:text-sm py-1.5 md:py-2 text-muted-foreground italic"
-                                  >
-                                    <Check className="mr-2 h-3 w-3 opacity-0" />
-                                    Todas as especialidades
-                                  </CommandItem>
-                                )}
-                                {Array.from(new Set(doctors.map((d) => d.specialty).filter(Boolean))).sort().map((spec) => (
-                                  <CommandItem
-                                    key={spec as string}
-                                    value={spec as string}
-                                    onSelect={() => {
-                                      setSelectedSpecialty(spec === selectedSpecialty ? "" : spec as string);
-                                      setOpenSpecialtyCombobox(false);
-                                    }}
-                                    className="text-xs md:text-sm py-1.5 md:py-2"
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-3 w-3 md:h-4 md:w-4",
-                                        selectedSpecialty === spec ? "opacity-100" : "opacity-0"
-                                      )}
-                                    />
-                                    <span className="truncate">{spec as string}</span>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      <p className="text-xs text-muted-foreground">
-                        Filtra médicos por área.
-                      </p>
-                    </div>
+                      {/* AQUI: Configurações de largura e posicionamento corrigidos */}
+                      <PopoverContent 
+                        className="w-[--radix-popover-trigger-width] min-w-0 p-0" 
+                        align="start"
+                        side="bottom"
+                      >
+                        <Command>
+                          <CommandInput placeholder="Procurar médico..." />
+                          
+                          {/* AQUI: Altura reduzida no mobile */}
+                          <CommandList className="max-h-[130px] md:max-h-[300px] overflow-y-auto">
+                            <CommandEmpty>Nenhum médico encontrado.</CommandEmpty>
+                            <CommandGroup>
+                              {doctors.map((doctor) => (
+                                <CommandItem
+                                  key={doctor.id}
+                                  value={doctor.full_name}
+                                  onSelect={() => {
+                                    setSelectedDoctor(doctor.id === selectedDoctor ? "" : doctor.id);
+                                    setOpenDoctorCombobox(false);
+                                  }}
+                                  className="text-xs md:text-sm py-1.5 md:py-2"
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-3 w-3 md:h-4 md:w-4",
+                                      selectedDoctor === doctor.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col truncate">
+                                    <span className="truncate font-medium">{doctor.full_name}</span>
+                                    <span className="text-[10px] md:text-xs text-muted-foreground truncate">{doctor.specialty}</span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
 
-                    {/* COMBOBOX DE MÉDICO */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Médico</Label>
-                      <Popover open={openDoctorCombobox} onOpenChange={setOpenDoctorCombobox}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={openDoctorCombobox}
-                            className="w-full justify-between"
-                            disabled={loadingDoctors}
-                          >
-                            <span className="truncate">
-                              {loadingDoctors ? "Carregando..." : (
-                                selectedDoctor
-                                  ? doctors.find((d) => d.id === selectedDoctor)?.full_name
-                                  : "Buscar médico..."
-                              )}
-                            </span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] min-w-0 p-0" align="start" side="bottom">
-                          <Command>
-                            <CommandInput placeholder="Procurar médico..." />
-                            <CommandList className="max-h-[200px] overflow-y-auto">
-                              <CommandEmpty>Nenhum médico encontrado.</CommandEmpty>
-                              <CommandGroup>
-                                {doctors
-                                  .filter((d) => !selectedSpecialty || d.specialty === selectedSpecialty)
-                                  .map((doctor) => (
-                                    <CommandItem
-                                      key={doctor.id}
-                                      value={doctor.full_name}
-                                      onSelect={() => {
-                                        setSelectedDoctor(doctor.id === selectedDoctor ? "" : doctor.id);
-                                        setOpenDoctorCombobox(false);
-                                      }}
-                                      className="text-xs md:text-sm py-1.5 md:py-2"
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-3 w-3 md:h-4 md:w-4",
-                                          selectedDoctor === doctor.id ? "opacity-100" : "opacity-0"
-                                        )}
-                                      />
-                                      <div className="flex flex-col truncate">
-                                        <span className="truncate font-medium">{doctor.full_name}</span>
-                                        {!selectedSpecialty && (
-                                          <span className="text-[10px] md:text-xs text-muted-foreground truncate">{doctor.specialty}</span>
-                                        )}
-                                      </div>
-                                    </CommandItem>
-                                  ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground mt-1">
                         Digite para filtrar por nome.
-                      </p>
-                    </div>
-
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -585,12 +466,7 @@ export default function ScheduleForm({ initialPatientId }: ScheduleFormProps) {
                   <div ref={calendarRef} className="flex justify-center w-full overflow-x-auto">
                     <CalendarShadcn
                       mode="single"
-                      disabled={(date) => {
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        return !selectedDoctor || date < today;
-                      }}
-                      fromDate={new Date()}
+                      disabled={!selectedDoctor}
                       selected={selectedDate ? new Date(selectedDate + "T12:00:00") : undefined}
                       onSelect={(date) => {
                         if (!date) return;

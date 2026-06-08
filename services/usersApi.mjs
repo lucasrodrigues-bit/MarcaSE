@@ -18,14 +18,13 @@ export const usersService = {
     },
 
     async create_user(data) {
-        const { role } = data;
-        if (role === "medico") return await api.post(`/functions/v1/create-doctor`, data);
-        if (role === "paciente") return await api.post(`/functions/v1/create-patient`, data);
+        // Esta é a função usada no page.tsx para criar usuários que não são médicos
         return await api.post(`/functions/v1/create-user-with-password`, data);
     },
 
     async registerPatient(data) {
-        return await api.post("/functions/v1/register-patient-with-password", data);
+        // POR QUÊ? Este endpoint é público e não requer token JWT, resolvendo o erro 401.
+        return await api.post("/functions/v1/register-patient", data);
     },
     // --- FIM DA NOVA FUNÇÃO ---
 
@@ -68,55 +67,31 @@ export const usersService = {
             permissions,
         };
     },
-
-    async update_user(userId, { full_name, email, phone, role, department }) {
-        await api.patch(`/rest/v1/profiles?id=eq.${userId}`, { full_name, email, phone });
-        await api.patch(`/rest/v1/user_roles?user_id=eq.${userId}`, { role });
-        if (role === "secretaria" && department !== undefined) {
-            await api.patch(`/rest/v1/secretaries?user_id=eq.${userId}`, { department });
-        }
-        if (role === "gestor" && department !== undefined) {
-            await api.patch(`/rest/v1/managers?user_id=eq.${userId}`, { department });
-        }
-    },
-
-    async delete_user(userId) {
-        // tenta limpar tabelas operacionais antes de remover perfil (ignora se não existir)
-        try { await api.delete(`/rest/v1/secretaries?user_id=eq.${userId}`); } catch (_) {}
-        try { await api.delete(`/rest/v1/managers?user_id=eq.${userId}`); } catch (_) {}
-        await api.delete(`/rest/v1/user_roles?user_id=eq.${userId}`);
-        return await api.delete(`/rest/v1/profiles?id=eq.${userId}`);
-    },
-
     async resetPassword(email) {
         if (!email) throw new Error("Email é obrigatório para resetar a senha.");
 
         try {
-            const redirectUrl = typeof window !== "undefined"
-                ? `${window.location.origin}/reset-password`
-                : undefined;
-
-            const res = await fetch(`${"https://yuanqfswhberkoevtmfr.supabase.co"}/auth/v1/recover`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/recover`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1YW5xZnN3aGJlcmtvZXZ0bWZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NTQzNjksImV4cCI6MjA3MDUzMDM2OX0.g8Fm4XAvtX46zifBZnYVH4tVuQkqUH6Ia9CXQj4DztQ",
+                    apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
                 },
-                body: JSON.stringify({ email, ...(redirectUrl && { redirect_url: redirectUrl }) }),
+                body: JSON.stringify({ email }),
             });
 
             const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
                 console.error("Erro no resetPassword:", res.status, data);
-                throw new Error(`Erro ${res.status}: ${data.detail || data.title || "Falha ao resetar senha."}`);
+                throw new Error(`Erro ${res.status}: ${data.message || "Falha ao resetar senha."}`);
             }
 
             console.log("✅ Reset de senha:", data);
             return data;
         } catch (err) {
             console.error("❌ Erro na chamada resetPassword:", err);
-            throw err instanceof Error ? err : new Error("Erro inesperado na recuperação de senha.");
+            throw new Error(err.message || "Erro inesperado na recuperação de senha.");
         }
     },
 };

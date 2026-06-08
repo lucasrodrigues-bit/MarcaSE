@@ -237,7 +237,7 @@ export default function DoctorDashboard() {
             toast({ title: "Sucesso", description: "Exceção deletada com sucesso" });
             setExceptions((prev: Exception[]) => prev.filter((p) => String(p.id) !== String(ExceptionId)));
         } catch (e: any) {
-            toast({ title: "Erro ao remover", description: "Não foi possível remover a exceção. Tente novamente." });
+            toast({ title: "Erro", description: e?.message || "Não foi possível deletar a exceção" });
         }
         setDeleteDialogOpen(false);
         setExceptionToDelete(null);

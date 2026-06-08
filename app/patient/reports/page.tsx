@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -52,8 +52,8 @@ export default function ReportsPage() {
         } catch (error) {
           console.error("Erro ao buscar laudos:", error)
           toast({
-            title: "Erro ao carregar laudos",
-            description: "Não foi possível exibir seus laudos. Tente recarregar a página.",
+            title: "Erro ao buscar laudos",
+            description: "Não foi possível carregar os laudos. Tente novamente.",
             variant: "destructive",
           })
         } finally {
@@ -79,7 +79,7 @@ export default function ReportsPage() {
     try {
       toast({
         title: "Preparando download...",
-        description: "Seu laudo está sendo preparado.",
+        description: "Gerando PDF do laudo médico",
       })
 
       const htmlContent = report.content_html;
@@ -103,8 +103,8 @@ export default function ReportsPage() {
     } catch (error) {
       console.error("Erro ao baixar laudo:", error)
       toast({
-        title: "Erro ao baixar laudo",
-        description: "Não foi possível realizar o download. Tente novamente.",
+        title: "Erro no download",
+        description: "Não foi possível baixar o laudo. Tente novamente.",
         variant: "destructive",
       })
     }
@@ -115,8 +115,8 @@ export default function ReportsPage() {
     setSelectedReport(null)
   }
 
-  const availableReports = reports.filter((report) => report.status.toLowerCase() === "completed")
-  const pendingReports = reports.filter((report) => report.status.toLowerCase() !== "completed")
+  const availableReports = reports.filter((report) => report.status.toLowerCase() === "draft")
+  const pendingReports = reports.filter((report) => report.status.toLowerCase() !== "draft")
 
   if (isLoading || isAuthLoading) {
     return (
@@ -188,7 +188,7 @@ export default function ReportsPage() {
                         </CardDescription>
                       </div>
                       <Badge variant="secondary" className="bg-green-100 text-green-800">
-                        Confirmado
+                        Finalizado
                       </Badge>
                     </div>
                   </CardHeader>
@@ -243,7 +243,7 @@ export default function ReportsPage() {
                         </CardDescription>
                       </div>
                       <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                        Pendente
+                        {report.status}
                       </Badge>
                     </div>
                   </CardHeader>
