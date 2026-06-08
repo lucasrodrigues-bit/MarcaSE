@@ -11,8 +11,7 @@ export const smsService = {
    */
   async sendSms({ phone_number, message, patient_id }) {
     try {
-      const token = localStorage.getItem("token");
-
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
       if (!token) {
         console.error("❌ [smsService] Nenhum token JWT encontrado.");
         return { success: false, error: "Token JWT não encontrado." };
