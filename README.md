@@ -1,8 +1,8 @@
-# 🏥 MediConnect — Sistema Inteligente de Gestão Clínica
+# 🏥 MarcaSE — Sistema Inteligente de Gestão Clínica
 
 ## 📌 Visão Geral
 
-O **MediConnect** é uma plataforma SaaS completa para gestão de clínicas médicas, com foco em:
+O **MarcaSE** é uma plataforma SaaS completa para gestão de clínicas médicas, com foco em:
 
 - Redução de absenteísmo (no-show)
 - Automação de processos clínicos
@@ -34,9 +34,8 @@ O absenteísmo na saúde é um problema crítico:
 
 O MediConnect resolve esses problemas através de:
 
-- 📲 Comunicação automatizada (WhatsApp, Email, SMS)
+- 📲 Comunicação automatizada (WhatsApp, SMS)
 - 🧠 IA preditiva para redução de faltas
-- 📊 Analytics e BI em tempo real
 - 🗓️ Otimização inteligente de agendas
 - 🧾 Automação de laudos médicos
 
@@ -92,11 +91,7 @@ Este projeto utiliza o **BMAD Method (Build, Measure, Analyze, Decide)** como ba
 
 - 🧠 IA preditiva para absenteísmo
 - 🔗 Plataforma end-to-end integrada
-- 📞 Comunicação omnichannel
 - 📊 Business Intelligence avançado
-- 📱 Aplicativo mobile personalizado
-- 🎤 Assistente por voz (futuro)
-
 ---
 
 ## 🏗️ Arquitetura do Sistema
@@ -106,7 +101,6 @@ Este projeto utiliza o **BMAD Method (Build, Measure, Analyze, Decide)** como ba
 **Frontend**
 - React.js
 - TailwindCSS
-- Flutter (mobile)
 - Typescript
 
 **Banco de Dados**
@@ -117,7 +111,7 @@ Este projeto utiliza o **BMAD Method (Build, Measure, Analyze, Decide)** como ba
 ### 🧩 Arquitetura
 Usuários
 ↓
-Frontend (React / Flutter)
+Frontend (React)
 ↓
 API Gateway
 ↓
@@ -169,18 +163,9 @@ PostgreSQL
 ---
 
 ### 📲 Comunicação
-- WhatsApp (API oficial)
-- Email automatizado
-- SMS (opcional)
+- SMS 
 - Histórico completo
-
----
-
-### 💰 Financeiro
-- Faturamento
-- Controle de pagamentos
-- Convênios
-- Fluxo de caixa
+- ChatBot
 
 ---
 
@@ -188,7 +173,6 @@ PostgreSQL
 - Dashboard executivo
 - Taxa de absenteísmo
 - Performance médica
-- Indicadores financeiros
 
 ---
 
@@ -198,7 +182,6 @@ PostgreSQL
 |--------------|--------|
 | 👨‍⚕️ Médico | Prontuário, laudos, agenda |
 | 🧑‍💼 Gestão | Acesso total + métricas |
-| 💰 Financeiro | Faturamento e relatórios |
 | 🧾 Secretaria | Agenda + pacientes |
 
 ---
@@ -222,14 +205,6 @@ PostgreSQL
 - ⚡ Tempo de laudo: < 5 min
 - 😊 Satisfação: > 80% (NPS)
 
-### 🧰 Ferramentas
-
-- Cypress (E2E)
-- Postman
-- SonarQube
-- Testes com usuários reais
-
----
 
 ## 📈 Roadmap
 
@@ -240,12 +215,9 @@ PostgreSQL
 
 ### Fase 2
 - Laudos médicos
-- Assinatura digital
 
 ### Fase 3
 - Comunicação automatizada
-- Relatórios e BI
-
 ---
 
 ## 🌍 Impacto
@@ -268,13 +240,3 @@ PostgreSQL
 - Receita recorrente mensal
 - Escalável nacionalmente
 
----
-
-## 🧩 Status do Projeto
-
-- ✅ Protótipos concluídos
-- ⚙️ Backend em desenvolvimento
-- 🔌 Integrações iniciadas
-- 🧪 Testes em andamento
-
----
