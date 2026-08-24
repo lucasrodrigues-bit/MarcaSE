@@ -107,22 +107,12 @@ Este projeto utiliza o **BMAD Method (Build, Measure, Analyze, Decide)** como ba
 - React.js
 - TailwindCSS
 - Flutter (mobile)
-
-**Backend**
-- Node.js
-- API RESTful
-- Autenticação JWT + RBAC
+- Typescript
 
 **Banco de Dados**
-- PostgreSQL
-
-**DevOps**
-- Docker
-- GitHub Actions
-- AWS
 - Supabase
 
----
+
 
 ### 🧩 Arquitetura
 Usuários
